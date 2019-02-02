@@ -1,7 +1,10 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from pymysql import cursors, connect
 
 app = Flask(__name__)
+CORS(app)
+
 db_conn = None # For connection to sql database
 
 def connect_database():
