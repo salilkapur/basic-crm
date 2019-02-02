@@ -1,0 +1,126 @@
+<html>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="script/app.js"></script>
+    <script src="datepicker/js/bootstrap-datepicker.js"></script>
+    <link rel="stylesheet" type="text/css" href="style/main.css">
+    <link rel="stylesheet" type="text/css" href="datepicker/css/datepicker.css">
+    <link href="js/google-code-prettify/prettify.css" rel="stylesheet">
+    <body>
+        <div class="wrapper">
+            <nav class="col-sm-2 accent-color-bg" id="sidebar">
+                <div class="sidebar-header">
+                    <h3>CRM</h3>
+                    <ul class="list-unstyled components">
+                        <li class="active">
+                            <a href="">Home</a>
+                        </li>
+                        <li>
+                            <a href="#">Reports</a>
+                        </li>
+                        <li>
+                            <a href="">Customers</a>
+                        </li>
+                        <li>
+                            <a href="#">Services</a>
+                        </li>
+                        <li>
+                            <a href="#">Staff</a>
+                        </li>
+                    </ul>            
+                </div>
+            </nav>
+            <div class="container container-fluid" id="content">
+                <div class="customer-content">
+                    <div class="col-sm-8 border border-secondary rounded" id="customer-info">
+                        <form>
+                            <div class="row customer-form-row">
+                                <div class="col">
+                                    <input id="cst_first_name" type="text" class="form-control" placeholder="First name">
+                                </div>
+                                <div class="col">
+                                    <input id="cst_last_name" type="text" class="form-control" placeholder="Last name">
+                                </div>
+                            </div>
+                            <div class="row customer-form-row">
+                                <div class="col">
+                                    <input id="cst_phone_1" type="text" class="form-control" placeholder="Phone No. 1">
+                                </div>
+                                <div class="col">
+                                    <input id="cst_phone_2" type="text" class="form-control" placeholder="Phone No. 2">
+                                </div>
+                            </div>
+                            <div class="row customer-form-row">
+                                <div class="col">
+                                    <input id="cst_address" type="textarea" class="form-control" placeholder="Address">
+                                </div>
+                            </div>
+                            <div class="row customer-form-row">
+                                <div class="col">
+                                    <input id="dob" class="form-control span2" size="12" type="text" value="Birthday">
+                                </div>
+                                <div class="col">
+                                    <input id="anniversary" class="form-control span2" size="12" type="text" value="Anniversary">
+                                </div>
+                                <div class="col">
+                                    <select id="inputState" class="form-control">
+                                        <option selected>Gender...</option>
+                                        <option>Male</option>
+                                        <option>Female</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row customer-form-row">
+                                <div class="col">
+                                     <button type="button" id="btn_search" class="btn btn-secondary mb-1">Search</button>
+                                     <button type="button" id="btn_add_cst" class="btn btn-secondary mb-1" hidden>Add Customer</button>
+                                </div>
+                            </div>
+                        </form>
+					</div>
+                    <div class="col-sm-8 border border-secondary rounded" id="customer-service">
+                        <div class="row customer-form-row">
+                            <div class="col">
+                                    <select id="cst_service" class="form-control">
+                                        <option selected>Service...</option>
+                                        <option>Haircut</option>
+                                        <option>Shampoo</option>
+                                    </select>
+                            </div>
+                            <div class="col">
+                                    <select id="cst_service_staff" class="form-control">
+                                        <option selected>Staff...</option>
+                                        <option>Staff1</option>
+                                        <option>Staff2</option>
+                                    </select>
+                            </div>
+                        </div>
+                        <div class="row customer-form-row">
+                            <div class="col">
+                            <button type="button" id="btn_add_cst_service" class="btn btn-secondary mb-1">Add Service</button>
+                            </div>
+                        </div>
+                        <div class="row customer-form-row">
+                            <ul class="list-group" id="cst_service_list">
+                            </ul>
+                        </div>
+					</div>
+                </div>
+            </div>
+        </div> 
+        <script type="text/javascript">
+            $(function() {
+                $('#dob').datepicker({
+                    format: 'mm-dd'
+                });
+                $('#anniversary').datepicker({
+                    format: 'mm-dd'
+                });
+
+            });
+        </script>
+
+    </body>
+</html>
