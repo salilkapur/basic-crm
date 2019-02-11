@@ -8,6 +8,8 @@
     <link rel="stylesheet" type="text/css" href="style/main.css">
     <link rel="stylesheet" type="text/css" href="datepicker/css/datepicker.css">
     <link href="js/google-code-prettify/prettify.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+    <title>CRM</title>
     <body>
         <div class="wrapper">
             <nav class="col-sm-2 accent-color-bg" id="sidebar">
@@ -37,11 +39,9 @@
                     <div class="col-sm-8 border border-secondary rounded" id="customer-info">
                         <form>
                             <div class="row customer-form-row">
-                                <div class="col">
-                                    <input id="cst_first_name" type="text" class="form-control" placeholder="First name">
-                                </div>
-                                <div class="col">
-                                    <input id="cst_last_name" type="text" class="form-control" placeholder="Last name">
+                                <div class="col-sm-6">
+                                    <input id="cst_name" type="text" class="form-control" placeholder="First name">
+                                    <input id="cst_id" type="text" class="form-control" hidden>
                                 </div>
                             </div>
                             <div class="row customer-form-row">
@@ -59,52 +59,61 @@
                             </div>
                             <div class="row customer-form-row">
                                 <div class="col">
-                                    <input id="dob" class="form-control span2" size="12" type="text" value="Birthday">
+                                    <input id="cst_dob" class="form-control span2" size="12" type="text" placeholder="Birthday">
                                 </div>
                                 <div class="col">
-                                    <input id="anniversary" class="form-control span2" size="12" type="text" value="Anniversary">
+                                    <input id="cst_anniversary" class="form-control span2" size="12" type="text" placeholder="Anniversary">
                                 </div>
                                 <div class="col">
-                                    <select id="inputState" class="form-control">
+                                    <select id="cst_gender" class="form-control">
                                         <option selected>Gender...</option>
-                                        <option>Male</option>
-                                        <option>Female</option>
+                                        <option id='cst_gender_male'>Male</option>
+                                        <option id='cst_gender_female'>Female</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="row customer-form-row">
+                                <label class="col" id="customer_not_found" style="color: red" hidden>Customer not found! Please add new customer</label>
+                                <label class="col" id="customer_added" style="color: green" hidden>Customer added!</label>
+                                <label class="col" id="cst_error" style="color: red" hidden></label>
+                            </div>
+                            <div class="row customer-form-row">
                                 <div class="col">
-                                     <button type="button" id="btn_search" class="btn btn-secondary mb-1">Search</button>
-                                     <button type="button" id="btn_add_cst" class="btn btn-secondary mb-1" hidden>Add Customer</button>
+                                     <button type="button" id="btn_search" class="btn btn-secondary mb-1" onclick="search_cst_phone()">Search</button>
+                                     <button type="button" id="btn_add_cst" class="btn btn-secondary mb-1" onclick="add_new_cst()"  hidden>Add Customer</button>
                                 </div>
                             </div>
                         </form>
 					</div>
-                    <div class="col-sm-8 border border-secondary rounded" id="customer-service">
+                    <div class="col-sm-8 border border-secondary rounded" id="customer-service" hidden>
                         <div class="row customer-form-row">
                             <div class="col">
-                                    <select id="cst_service" class="form-control">
+                                    <select id="cst_services" class="form-control">
                                         <option selected>Service...</option>
-                                        <option>Haircut</option>
-                                        <option>Shampoo</option>
                                     </select>
                             </div>
                             <div class="col">
                                     <select id="cst_service_staff" class="form-control">
                                         <option selected>Staff...</option>
-                                        <option>Staff1</option>
-                                        <option>Staff2</option>
                                     </select>
                             </div>
                         </div>
                         <div class="row customer-form-row">
                             <div class="col">
-                            <button type="button" id="btn_add_cst_service" class="btn btn-secondary mb-1">Add Service</button>
+                                <button type="button" id="btn_add_cst_service" class="btn btn-secondary mb-1" onclick="add_new_cst_service()">Add Service</button>
                             </div>
                         </div>
                         <div class="row customer-form-row">
-                            <ul class="list-group" id="cst_service_list">
-                            </ul>
+                            <div class="col">
+                                <ul class="list-group" id="cst_service_list">
+                                    <li class="list-group-item clearfix">
+                                        <span class="button-group">
+                                            <button type="button" class="btn btn-outline-danger btn-sm"><span class="fas fa-times"></span></button>
+                                        </span>
+                                        <span class="label label-default">Service1 - Staff1</span>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
 					</div>
                 </div>
@@ -112,15 +121,14 @@
         </div> 
         <script type="text/javascript">
             $(function() {
-                $('#dob').datepicker({
-                    format: 'mm-dd'
+                $('#cst_dob').datepicker({
+                    format: 'dd/mm'
                 });
-                $('#anniversary').datepicker({
-                    format: 'mm-dd'
+                $('#cst_anniversary').datepicker({
+                    format: 'dd/mm'
                 });
 
             });
         </script>
-
     </body>
 </html>

@@ -85,3 +85,12 @@ ul ul a {
     margin-top: 2%;
     padding: 10px;
 }
+
+.list-group {
+    line-height: 30px;
+}
+
+.span-delete-button {
+    padding-left: 70%;
+}
+
