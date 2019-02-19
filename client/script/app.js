@@ -1,10 +1,11 @@
 /* Basic configuration.
  * This should be moved to a separate file ASAP.
  */
-api_base_url = 'http://localhost:5000/'
+api_base_url = 'http://192.168.0.4:5000/'
 
 // This is global variable used to keep track of the number of services for a customer
 cst_service_count = 0;
+cst_services = [];
 
 window.onload = init_main()
 
@@ -17,14 +18,16 @@ function call_api(url, data, method, callback) {
     else {
         return false
     }
+    
+    request.withCredentials = true;
 
     request.onload = function () {
         console.log(this.response);
-        var data = JSON.parse(this.response);
-        if (request.status < 200 || request.status >= 400) {
-            data = null
+        var data = null;
+        if (request.status >= 200 && request.status < 400 && callback != null) {
+            data = JSON.parse(this.response);
+            callback(data)
         }
-        callback(data)
     }
     
     request.send()
@@ -40,6 +43,44 @@ function prepare_api_get_url(api_url, args) {
     }
     args_str = args_str.substring(0, args_str.length - 1)
     return api_base_url + api_url + args_str;
+}
+
+function hide_all_content() {
+    document.getElementById('home-content').hidden = true;
+    document.getElementById('li-home').classList.remove('active');
+    document.getElementById('today-content').hidden = true;
+    document.getElementById('li-today').classList.remove('active');
+    document.getElementById('customers-content').hidden = true;
+    document.getElementById('li-customers').classList.remove('active');
+    document.getElementById('manage-content').hidden = true;
+    document.getElementById('li-manage').classList.remove('active');
+}
+
+function goto_today() {
+    hide_all_content();
+    document.getElementById('today-content').hidden = false;
+    document.getElementById('li-today').classList.add('active');
+}
+
+function goto_home() {
+    hide_all_content();
+    document.getElementById('home-content').hidden = false;
+    document.getElementById('li-home').classList.add('active');
+
+    reset_cst_information();
+    reset_cst_service_box();
+}
+
+function goto_customers() {
+}
+
+function goto_manage() {
+    hide_all_content();
+    document.getElementById('manage-content').hidden = false;
+    document.getElementById('li-manage').classList.add('active');
+
+    get_all_services(populate_services_manange_list);
+    get_all_staff(populate_staff_manage_list);
 }
 
 function print_api_result(ret) {
@@ -62,6 +103,34 @@ function reset_cst_error() {
     cst_error.hidden = true;
 }
 
+function reset_cst_service_box() {
+    cst_services = [];
+    cst_service_count = 0;
+    document.getElementById('cst_service_list').innerHTML = '';
+    document.getElementById('cst_services').selectedIndex = 0;
+    document.getElementById('cst_service_staff').selectedIndex = 0;
+    document.getElementById('cst_service_location').selectedIndex = 0;
+    get_all_services();
+    get_all_staff();
+}
+
+function reset_cst_information() {
+    document.getElementById('cst_id').value = '';
+    document.getElementById('cst_name').value = '';
+    document.getElementById('cst_phone_1').value = '';
+    document.getElementById('cst_phone_2').value = '';
+    document.getElementById('cst_address').value = '';
+    document.getElementById('cst_dob').value = '';
+    document.getElementById('cst_anniversary').value = '';
+    document.getElementById('cst_gender').selectedIndex = 0;
+}
+
+function reset_home_content() {
+    reset_cst_information();
+    document.getElementById('customer-service').hidden = true;
+    reset_cst_service_box();
+}
+
 // User authentication functions
 function auth_user_callback(response_data) {
     console.log(response_data)    
@@ -80,13 +149,30 @@ function auth_user () {
     return true
 }
 
+function populate_services_manange_list(response_data) {
+    var idx = 0;
+    
+    // Get the services element
+    var services_list = document.getElementById('services-manage-list')
+    services_list.innerHTML = '';
+    for (idx = 0; idx < response_data.length; idx++) {
+        service = response_data[idx];
+        var child = document.createElement('a');
+        child.classList.add('list-group-item');
+        child.classList.add('list-group-item-action');
+        child.innerHTML = service.name;
+        services_list.appendChild(child);
+    }
+}
+
 // Hopefully this is generic enough
 function populate_services_list(response_data, dom_id) {
     // We have all the services. Populate the page with the data
     var idx = 0;
 
     // Get the services element
-    var services_list = document.getElementById(dom_id)
+    var services_list = document.getElementById(dom_id);
+    services_list.innerHTML = '';
     for (idx = 0; idx < response_data.length; idx++) {
         service = response_data[idx];
         var child = document.createElement('option');
@@ -100,13 +186,34 @@ function get_all_services_callback(response_data) {
     populate_services_list(response_data, 'cst_services')
 }
 
-function get_all_services() {
+function get_all_services(callback=null) {
     api_url = prepare_api_get_url('get_all_services');
     
-    var ret = call_api(api_url, null, 'GET', get_all_services_callback);
+    if (callback == null) {
+        callback = get_all_services_callback;
+    }
+
+    var ret = call_api(api_url, null, 'GET', callback);
     print_api_result(ret);
 
     return true
+}
+
+function populate_staff_manage_list(response_data) {
+    var idx = 0;
+
+    // Get the staff element
+    var staff_list = document.getElementById('staff-manage-list');
+    staff_list.innerHTML = '';
+    for (idx = 0; idx < response_data.length; idx++) {
+        staff = response_data[idx];
+        var child = document.createElement('a');
+        child.classList.add('list-group-item');
+        child.classList.add('list-group-item-action');
+        child.innerHTML = staff.name;
+        staff_list.appendChild(child);
+    }
+
 }
 
 
@@ -114,9 +221,10 @@ function get_all_services() {
 function populate_staff_list(response_data, dom_id) {
     // We have all the staff. Populate the page with the data
     var idx = 0;
-    console.log(response_data);
+
     // Get the staff element
     var staff_list = document.getElementById(dom_id)
+    staff_list.innerHTML = '';
     for (idx = 0; idx < response_data.length; idx++) {
         staff = response_data[idx];
         var child = document.createElement('option');
@@ -130,10 +238,14 @@ function get_all_staff_callback(response_data) {
     populate_staff_list(response_data, 'cst_service_staff')
 }
 
-function get_all_staff() {
+function get_all_staff(callback=null) {
     api_url = prepare_api_get_url('get_all_staff');
+    
+    if (callback == null) {
+        callback = get_all_staff_callback;
+    }
 
-    var ret = call_api(api_url, null, 'GET', get_all_staff_callback);
+    var ret = call_api(api_url, null, 'GET', callback);
     print_api_result(ret);
 }
 
@@ -181,6 +293,7 @@ function search_customer_callback(response_data) {
         add_cst.hidden = false;
         display_cst_error('Customer not found. Please add a new customer');
     }
+    reset_cst_service_box();
 }
 
 function search_cst_phone() {
@@ -199,24 +312,43 @@ function search_cst_phone() {
 
     api_url = prepare_api_get_url('search_customer', args);
     var ret = call_api(api_url, null, 'GET', search_customer_callback);
-    print_api_result(ret);
 }
 
-function add_new_cst() {
+function add_new_customer_callback() {
+    // New customer added. Search for the customer.
+    search_cst_phone();
+}
+
+function add_new_customer() {
     // Check all required fields are present
     args = {}
 
     reset_cst_error();
+    args['cst_name'] = document.getElementById('cst_name').value;
+    args['cst_phone_1'] = document.getElementById('cst_phone_1').value;
+    args['cst_phone_2'] = document.getElementById('cst_phone_2').value;
+    args['cst_address'] = document.getElementById('cst_address').value;
+    args['cst_gender_idx'] = document.getElementById('cst_gender').selectedIndex; 
+    args['cst_dob'] = document.getElementById('cst_dob').value;
+    args['cst_anniversary'] = document.getElementById('cst_anniversary').value;
 
-    if (document.getElementById('cst_name').value == '') {
+    if (args['cst_name'] == '') {
         display_cst_error('Please enter customer name');
+        return
     }
 
-    if (document.getElementById('cst_phone_1').value == '' &&
-        document.getElementById('cst_phone_2').value == '') {
+    if (args['cst_phone_1'] == '' && args['cst_phone_2'] == '') {
         display_cst_error('Please enter phone number');
+        return
+    }
+    
+    if (args['cst_gender_idx'] == 0) {
+        display_cst_error('Please select gender');
+        return
     }
 
+    api_url = prepare_api_get_url('add_new_customer', args);
+    var ret = call_api(api_url, null, 'GET', add_new_customer_callback);
 }
 
 function create_new_service_element(id, service, staff) {
@@ -233,6 +365,7 @@ function create_new_service_element(id, service, staff) {
     delete_button.classList.add('btn-outline-danger');
     delete_button.classList.add('btn-sm');
     delete_button.id = 'cst_service_del_btn_' + id;
+    delete_button.onclick = function () { delete_cst_service(id); };
     span_button.appendChild(delete_button)
 
     var span_fas_times = document.createElement('span');
@@ -253,16 +386,66 @@ function create_new_service_element(id, service, staff) {
     document.getElementById('cst_service_list').appendChild(list_element);
 }
 
+function delete_cst_service(id) {
+    // Remove this entry from the list of services
+    cst_services[id]['staff_id'] = -1;
+    cst_services[id]['service_id'] = -1;
+    document.getElementById('cst_service_' + id).hidden = true;
+    console.log(cst_services);
+}
+
 function add_new_cst_service() {
     var services_list = document.getElementById('cst_services');
-    var service = services_list.options[services_list.selectedIndex].innerHTML;
+    if (services_list.selectedIndex == 0)
+        return;
 
+    var service = services_list.options[services_list.selectedIndex].innerHTML;
+    var service_id = services_list.options[services_list.selectedIndex].value;
+    
     var staff_list = document.getElementById('cst_service_staff');
+    if (staff_list.selectedIndex == 0)
+        return;
+
     var staff = staff_list.options[staff_list.selectedIndex].innerHTML;
+    var staff_id = staff_list.options[staff_list.selectedIndex].value;
+    
+    var customer_id = document.getElementById('cst_id').value;
+    var service_location = document.getElementById('cst_service_location').selectedIndex;
+    if (service_location == 0)
+        return;
 
     create_new_service_element(cst_service_count, service, staff);
     cst_service_count = cst_service_count + 1; 
-    cst_services = Array()
+    cst_services.push({'customer_id': customer_id, 'staff_id': staff_id, 'service_id': service_id, 'location': service_location});
+    console.log(cst_services);
+    services_list.selectedIndex = 0;
+    staff_list.selectedIndex = 0;
+}
+
+function cst_done() {
+    var idx = 0;
+    for(idx = 0; idx < cst_services.length; idx++) {
+        if (cst_services[idx]['staff_id'] == -1 || cst_services[idx]['service_id'] == -1) {
+            continue;
+        }
+        api_url = prepare_api_get_url('add_customer_transaction', cst_services[idx]);
+        var ret = call_api(api_url, null, 'GET', null)
+    }
+    reset_home_content();
+}
+
+function add_new_service_callback() {
+    get_all_services(populate_services_manange_list);
+}
+
+function add_new_service() {
+    var service = document.getElementById('service_name').value;
+    args = {};
+    args['service_name'] = service;
+    args['service_price'] = 0;
+    api_url = prepare_api_get_url('add_new_service', args);    
+    var ret = call_api(api_url, null, 'GET', add_new_service_callback)
+    document.getElementById('service_name').value = '';
 }
 
 function init_main() {

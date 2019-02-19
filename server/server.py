@@ -1,3 +1,7 @@
+'''
+NOTE: Server only understands UTC. All dates received and sent are assumed UTC
+'''
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from pymysql import cursors, connect
@@ -35,7 +39,20 @@ def execute_query(query, args, ret_type):
             result = cursor.fetchall()
 
     return result
-    
+
+@app.after_request
+def add_cors(resp):
+    """ Ensure all responses have the CORS headers. This ensures any failures are also accessible
+        by the client. """
+    resp.headers['Access-Control-Allow-Origin'] = request.headers.get('Origin','*')
+    resp.headers['Access-Control-Allow-Credentials'] = 'true'
+    resp.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS, GET'
+    resp.headers['Access-Control-Allow-Headers'] = request.headers.get( 
+        'Access-Control-Request-Headers', 'Authorization' )
+    # set low for debugging
+    if app.debug:
+        resp.headers['Access-Control-Max-Age'] = '1'
+    return resp
 
 @app.route('/')
 def root():
@@ -57,14 +74,14 @@ def authenticate_user():
         return jsonify("false")
 
 
-@app.route('/get_all_services', methods=['GET'])
+@app.route('/get_all_services')
 def get_all_services():
 
     query = "SELECT * FROM services ORDER BY name"
     result = execute_query(query, (), 'all')
     return jsonify(result)
 
-@app.route('/get_all_staff', methods=['GET'])
+@app.route('/get_all_staff')
 def get_all_staff():
 
     query = "SELECT * FROM staff ORDER BY name"
@@ -74,7 +91,7 @@ def get_all_staff():
 
 # This is the entry point for all search queries. It takes
 # Key and value as input.
-@app.route('/search_customer', methods=['GET'])
+@app.route('/search_customer')
 def search_customer():
     result = None
     
@@ -92,6 +109,60 @@ def search_customer_by_phone(search_value):
     result = execute_query(query, (search_value, search_value), 'one')
 
     return result
+
+@app.route('/add_new_customer', methods=['GET'])
+def add_new_customer():
+    args = request.args
+    query = "INSERT INTO customers (name, address, phone_1, phone_2, dob, anniversary, gender) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+    
+    gender = None
+    if args.get('cst_gender_idx') == '1':
+        gender = 'MALE'
+    elif args.get('cst_gender_idx') == '2':
+        gender = 'FEMALE'
+    
+    if args.get('cst_dob') == '':
+        dob = None
+    else:
+        dob = '-'.join(['9999', args.get('cst_dob').split('/')[1], args.get('cst_dob').split('/')[0]])
+    
+    if args.get('cst_anniversary') == '':
+        anniversary = None
+    else:
+        anniversary = '-'.join(['9999', args.get('cst_anniversary').split('/')[1], args.get('cst_anniversary').split('/')[0]])
+
+    execute_query(query, (args.get('cst_name'),
+                          args.get('cst_address'),
+                          args.get('cst_phone_1'),
+                          args.get('cst_phone_2'),
+                          dob,
+                          anniversary,
+                          gender)
+                      , 'one')
+
+    return jsonify('true')
+    
+@app.route('/add_customer_transaction', methods=['GET'])
+def add_customer_transaction():
+    customer_id = request.args.get('customer_id')
+    service_id = request.args.get('service_id')
+    staff_id = request.args.get('staff_id')
+    location = request.args.get('location')
+
+    query = "INSERT INTO transactions (customer_id, service_id, staff_id, location, txn_time) VALUES (%s, %s, %s, %s, UTC_TIMESTAMP)"
+    execute_query(query, (customer_id, service_id, staff_id, location), 'one')
+
+    return jsonify('true')
+
+@app.route('/add_new_service', methods=['GET'])
+def add_new_service():
+    service_name = request.args.get('service_name');
+    service_price = request.args.get('service_price');
+    
+    query = "INSERT INTO services (name, price) VALUES (%s, %s)"
+    execute_query(query, (service_name, service_price), 'one')
+
+    return jsonify('true')
 
 def main():
     global db_conn

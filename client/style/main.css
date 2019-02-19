@@ -73,7 +73,7 @@ ul ul a {
     background: #6d7fcc;
 }
 
-.customer-content {
+.content-box {
     margin-top: 10%;
 }
 
@@ -94,3 +94,11 @@ ul ul a {
     padding-left: 70%;
 }
 
+.list-group-custom {
+    max-height: 500px;
+    overflow-y: scroll;
+}
+
+.custom-col {
+    margin-right: 80px;
+}
