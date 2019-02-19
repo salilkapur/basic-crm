@@ -440,6 +440,9 @@ function add_new_service_callback() {
 
 function add_new_service() {
     var service = document.getElementById('service_name').value;
+    if (service == '')
+        return;
+
     args = {};
     args['service_name'] = service;
     args['service_price'] = 0;
