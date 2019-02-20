@@ -72,6 +72,11 @@ function goto_home() {
 }
 
 function goto_customers() {
+    hide_all_content();
+    document.getElementById('customers-content').hidden = false;
+    document.getElementById('li-customers').classList.add('active');
+
+    get_all_customers();
 }
 
 function goto_manage() {
@@ -147,6 +152,50 @@ function auth_user () {
     print_api_result(ret)
 
     return true
+}
+
+function populate_all_customers_list(response_data) {
+    var idx = 0;
+    
+    // Get the services element
+    var services_list = document.getElementById('all-customers-list')
+    services_list.innerHTML = '';
+    for (idx = 0; idx < response_data.length; idx++) {
+        service = response_data[idx];
+        var child = document.createElement('div');
+        child.classList.add('list-group-item');
+        child.classList.add('list-group-item-action');
+        var name_label = document.createElement('label');
+        name_label.innerHTML = service.name;
+        child.appendChild(name_label);
+        child.append(document.createElement('br'));
+        var phone_label = document.createElement('label');
+        phone_label.classList.add('gray-color');
+        phone_label.innerHTML = service.phone_1;
+        if (service.phone_2 != '') {
+            phone_label.innerHTML += ', ' + service.phone_2;
+        }
+        child.appendChild(phone_label);
+        services_list.appendChild(child);
+    }
+}
+
+function get_all_customers_callback(response_data) {
+    populate_all_customers_list(response_data);
+}
+
+function get_all_customers(callback=null) {
+    api_url = prepare_api_get_url('get_all_customers');
+    
+    if (callback == null) {
+        callback = get_all_customers_callback;
+    }
+
+    var ret = call_api(api_url, null, 'GET', callback);
+    print_api_result(ret);
+
+    return true
+
 }
 
 function populate_services_manange_list(response_data) {

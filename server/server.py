@@ -89,6 +89,14 @@ def get_all_staff():
 
     return jsonify(result)
 
+@app.route('/get_all_customers')
+def get_all_customers():
+
+    query = "SELECT name, phone_1, phone_2 FROM customers ORDER BY name"
+    result = execute_query(query, (), 'all')
+
+    return jsonify(result)
+
 # This is the entry point for all search queries. It takes
 # Key and value as input.
 @app.route('/search_customer')

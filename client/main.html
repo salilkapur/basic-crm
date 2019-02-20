@@ -23,7 +23,7 @@
                             <a onclick="goto_today()">Today</a>
                         </li>
                         <li id='li-customers'>
-                            <a onclick="goto_customers()">Customers</a>
+                            <a onclick="goto_customers()">Clients</a>
                         </li>
                         <li id='li-manage'>
                             <a onclick="goto_manage()">Manage</a>
@@ -126,8 +126,10 @@
             <div class="container container-fluid" id="today-content" hidden>
 
             </div>
-            <div class="container container-fluid" id="customers-content" hidden>
-
+            <div class="container container-fluid customer-form-row" id="customers-content" hidden>
+                <h1 class="display-4">Clients</h1>
+                <div class="list-group list-group-custom-long col-6" id='all-customers-list'>
+                </div>
             </div>
             
             <div class="container container-fluid" id="manage-content" hidden>

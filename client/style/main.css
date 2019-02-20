@@ -99,6 +99,14 @@ ul ul a {
     overflow-y: scroll;
 }
 
+.list-group-custom-long {
+    max-height: 700px;
+    overflow-y: scroll;
+}
 .custom-col {
     margin-right: 80px;
+}
+
+.gray-color {
+    color: gray;
 }
