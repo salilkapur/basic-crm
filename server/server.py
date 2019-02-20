@@ -97,6 +97,24 @@ def get_all_customers():
 
     return jsonify(result)
 
+@app.route('/get_today_stats')
+def get_today_stats():
+    
+    final_result = {}
+    query = "SELECT COUNT(DISTINCT customer_id) as customers from transactions WHERE DATE(txn_time)=UTC_DATE"
+    result = execute_query(query, (), 'all')
+    final_result['customers'] = result[0]['customers']
+
+    query = "SELECT COUNT(*) AS total_customers FROM customers WHERE DATE(created_on)=UTC_DATE"
+    result = execute_query(query, (), 'all')
+    final_result['new_customers'] = result[0]['total_customers']
+
+    query = "SELECT COUNT(*) AS total_txn FROM transactions WHERE DATE(txn_time)=UTC_DATE"
+    result = execute_query(query, (), 'all')
+    final_result['txn'] = result[0]['total_txn']
+
+    return jsonify(final_result)
+
 # This is the entry point for all search queries. It takes
 # Key and value as input.
 @app.route('/search_customer')
@@ -121,7 +139,7 @@ def search_customer_by_phone(search_value):
 @app.route('/add_new_customer', methods=['GET'])
 def add_new_customer():
     args = request.args
-    query = "INSERT INTO customers (name, address, phone_1, phone_2, dob, anniversary, gender) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+    query = "INSERT INTO customers (name, address, phone_1, phone_2, dob, anniversary, gender, create_on) VALUES (%s, %s, %s, %s, %s, %s, %s, UTC_TIMESTAMP)"
     
     gender = None
     if args.get('cst_gender_idx') == '1':

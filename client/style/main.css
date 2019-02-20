@@ -110,3 +110,19 @@ ul ul a {
 .gray-color {
     color: gray;
 }
+
+.top-padding {
+    padding-top: 2%;
+}
+
+.success {
+    color: #16D39A !important;
+}
+
+.font-large-2 {
+    font-size: 3rem !important;
+}
+
+.float-right {
+    float: right !important;
+}

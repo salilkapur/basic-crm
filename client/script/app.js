@@ -22,7 +22,6 @@ function call_api(url, data, method, callback) {
     request.withCredentials = true;
 
     request.onload = function () {
-        console.log(this.response);
         var data = null;
         if (request.status >= 200 && request.status < 400 && callback != null) {
             data = JSON.parse(this.response);
@@ -45,6 +44,11 @@ function prepare_api_get_url(api_url, args) {
     return api_base_url + api_url + args_str;
 }
 
+function getUTCTime() {
+    var now = new Date();
+    return now.getUTCFullYear() +'/' + now.getUTCMonth() + '/' + now.getUTCDate();
+}
+
 function hide_all_content() {
     document.getElementById('home-content').hidden = true;
     document.getElementById('li-home').classList.remove('active');
@@ -60,6 +64,9 @@ function goto_today() {
     hide_all_content();
     document.getElementById('today-content').hidden = false;
     document.getElementById('li-today').classList.add('active');
+    console.log(getUTCTime());
+
+    get_today_stats();
 }
 
 function goto_home() {
@@ -147,9 +154,26 @@ function auth_user () {
     args['password']='salil';
 
     api_url = prepare_api_get_url('auth_user', args);    
-    console.log(api_url)
     var ret = call_api(api_url, null, 'GET', auth_user_callback)
     print_api_result(ret)
+
+    return true
+}
+
+function populate_today_stats(response_data) {
+    document.getElementById('today_customers').innerHTML = response_data['customers'];
+    document.getElementById('today_new_customers').innerHTML = response_data['new_customers'];
+    document.getElementById('today_services').innerHTML = response_data['txn'];
+}
+
+function get_today_stats(callback=null) {
+    api_url = prepare_api_get_url('get_today_stats');
+    
+    if (callback == null) {
+        callback = populate_today_stats;
+    }
+
+    call_api(api_url, null, 'GET', callback);
 
     return true
 }
@@ -440,7 +464,6 @@ function delete_cst_service(id) {
     cst_services[id]['staff_id'] = -1;
     cst_services[id]['service_id'] = -1;
     document.getElementById('cst_service_' + id).hidden = true;
-    console.log(cst_services);
 }
 
 function add_new_cst_service() {
@@ -466,7 +489,6 @@ function add_new_cst_service() {
     create_new_service_element(cst_service_count, service, staff);
     cst_service_count = cst_service_count + 1; 
     cst_services.push({'customer_id': customer_id, 'staff_id': staff_id, 'service_id': service_id, 'location': service_location});
-    console.log(cst_services);
     services_list.selectedIndex = 0;
     staff_list.selectedIndex = 0;
 }
