@@ -31,8 +31,9 @@ CREATE TABLE `customers` (
   `dob` date DEFAULT NULL,
   `anniversary` date DEFAULT NULL,
   `gender` varchar(10) DEFAULT NULL,
+  `created_on` datetime DEFAULT NULL,
   PRIMARY KEY (`customer_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -47,7 +48,7 @@ CREATE TABLE `services` (
   `name` varchar(50) DEFAULT NULL,
   `price` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`service_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -65,7 +66,7 @@ CREATE TABLE `staff` (
   `joined_on` datetime DEFAULT NULL,
   `is_active` bit(1) DEFAULT NULL,
   PRIMARY KEY (`staff_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -80,6 +81,8 @@ CREATE TABLE `transactions` (
   `staff_id` bigint(20) NOT NULL,
   `customer_id` bigint(20) NOT NULL,
   `service_id` bigint(20) NOT NULL,
+  `location` int(11) DEFAULT NULL,
+  `txn_time` datetime DEFAULT NULL,
   PRIMARY KEY (`transaction_id`),
   KEY `staff_id` (`staff_id`),
   KEY `customer_id` (`customer_id`),
@@ -87,7 +90,7 @@ CREATE TABLE `transactions` (
   CONSTRAINT `transactions_ibfk_1` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`staff_id`),
   CONSTRAINT `transactions_ibfk_2` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`customer_id`),
   CONSTRAINT `transactions_ibfk_3` FOREIGN KEY (`service_id`) REFERENCES `services` (`service_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -101,12 +104,12 @@ CREATE TABLE `users` (
   `user_id` bigint(20) NOT NULL AUTO_INCREMENT,
   `username` varchar(50) DEFAULT NULL,
   `password` varchar(50) DEFAULT NULL,
-  `is_admin` bit(1) DEFAULT NULL,
+  `is_admin` int(11) DEFAULT NULL,
   `created_on` datetime DEFAULT NULL,
   `modified_on` datetime DEFAULT NULL,
-  `is_active` bit(1) DEFAULT NULL,
+  `is_active` int(11) DEFAULT NULL,
   PRIMARY KEY (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -118,4 +121,4 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2019-01-31 16:26:13
+-- Dump completed on 2019-02-20 19:08:55
