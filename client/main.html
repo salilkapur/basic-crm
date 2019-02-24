@@ -1,5 +1,5 @@
 <html>
-    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
@@ -28,7 +28,7 @@
                         <li id='li-manage'>
                             <a onclick="goto_manage()">Manage</a>
                         </li>
-                    </ul>            
+                    </ul>
                 </div>
             </nav>
             <div class="container container-fluid" id="home-content">
@@ -37,7 +37,7 @@
                         <form>
                             <div class="row customer-form-row">
                                 <div class="col-sm-6">
-                                    <input id="cst_name" type="text" class="form-control" placeholder="First name">
+                                    <input id="cst_name" type="text" class="form-control" placeholder="Name">
                                     <input id="cst_id" type="text" class="form-control" hidden>
                                 </div>
                             </div>
@@ -178,13 +178,21 @@
                         </div>
                     </div>
                 </div>
+                </br>
+                <h3 class="display-4">Clients</h3>
+                <div class="row customer-form-row">
+                    <div class="list-group list-group-custom-long col-3" id='today-customers-list'>
+                    </div>
+                    <div class="list-group list-group-custom-long col-3" id='today-customer-service-list'>
+                    </div>
+                </div>
             </div>
             <div class="container container-fluid customer-form-row" id="customers-content" hidden>
                 <h1 class="display-4">Clients</h1>
                 <div class="list-group list-group-custom-long col-6" id='all-customers-list'>
                 </div>
             </div>
-            
+
             <div class="container container-fluid" id="manage-content" hidden>
                 <div class="row content-box">
                     <div id='services-column' class='col-6 custom-col'>
@@ -208,7 +216,7 @@
                     </div>
                 </div>
             </div>
-        </div> 
+        </div>
         <script type="text/javascript">
             $(function() {
                 $('#cst_dob').datepicker({

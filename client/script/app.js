@@ -1,7 +1,7 @@
 /* Basic configuration.
  * This should be moved to a separate file ASAP.
  */
-api_base_url = 'http://192.168.0.4:5000/'
+api_base_url = 'http://34.226.121.100:5000/'
 
 // This is global variable used to keep track of the number of services for a customer
 cst_service_count = 0;
@@ -18,7 +18,7 @@ function call_api(url, data, method, callback) {
     else {
         return false
     }
-    
+
     request.withCredentials = true;
 
     request.onload = function () {
@@ -28,7 +28,7 @@ function call_api(url, data, method, callback) {
             callback(data)
         }
     }
-    
+
     request.send()
 
     return true
@@ -64,16 +64,16 @@ function goto_today() {
     hide_all_content();
     document.getElementById('today-content').hidden = false;
     document.getElementById('li-today').classList.add('active');
-    console.log(getUTCTime());
 
     get_today_stats();
+    get_today_customers_list();
 }
 
 function goto_home() {
     hide_all_content();
     document.getElementById('home-content').hidden = false;
     document.getElementById('li-home').classList.add('active');
-
+    document.getElementById('customer-service').hidden = true;
     reset_cst_information();
     reset_cst_service_box();
 }
@@ -145,7 +145,7 @@ function reset_home_content() {
 
 // User authentication functions
 function auth_user_callback(response_data) {
-    console.log(response_data)    
+    console.log(response_data)
 }
 
 function auth_user () {
@@ -153,7 +153,7 @@ function auth_user () {
     args['username']='salil';
     args['password']='salil';
 
-    api_url = prepare_api_get_url('auth_user', args);    
+    api_url = prepare_api_get_url('auth_user', args);
     var ret = call_api(api_url, null, 'GET', auth_user_callback)
     print_api_result(ret)
 
@@ -168,7 +168,7 @@ function populate_today_stats(response_data) {
 
 function get_today_stats(callback=null) {
     api_url = prepare_api_get_url('get_today_stats');
-    
+
     if (callback == null) {
         callback = populate_today_stats;
     }
@@ -178,9 +178,84 @@ function get_today_stats(callback=null) {
     return true
 }
 
+function populate_customers_today_list(response_data) {
+    var idx = 0;
+
+    // Get the services element
+    var services_list = document.getElementById('today-customers-list')
+    services_list.innerHTML = '';
+    for (idx = 0; idx < response_data.length; idx++) {
+        customer = response_data[idx];
+        var child = document.createElement('div');
+        child.classList.add('list-group-item');
+        child.classList.add('list-group-item-action');
+        child.dataset.target = customer.customer_id;
+        child.onclick = function() {get_today_customer_services(event) };
+        var name_label = document.createElement('label');
+        name_label.innerHTML = customer.name;
+        child.appendChild(name_label);
+        child.append(document.createElement('br'));
+        var services_label = document.createElement('label');
+        services_label.classList.add('gray-color');
+        services_label.innerHTML = customer.services;
+        //child.appendChild(services_label);
+        services_list.appendChild(child);
+    }
+}
+
+function get_today_customers_list_callback(response_data) {
+    populate_customers_today_list(response_data);
+}
+
+function get_today_customers_list(callback=null) {
+    api_url = prepare_api_get_url('get_today_customers');
+
+    if (callback == null) {
+        callback = get_today_customers_list_callback;
+    }
+
+    var ret = call_api(api_url, null, 'GET', callback);
+    print_api_result(ret);
+
+    return true
+}
+
+function get_today_customer_services_callback(response_data) {
+    var idx = 0;
+
+    // Get the services element
+    var services_list = document.getElementById('today-customer-service-list')
+    services_list.innerHTML = '';
+    for (idx = 0; idx < response_data.length; idx++) {
+        service = response_data[idx];
+        var child = document.createElement('a');
+        child.classList.add('list-group-item');
+        child.classList.add('list-group-item-action');
+        child.innerHTML = service.name;
+        services_list.appendChild(child);
+    }
+
+}
+
+function get_today_customer_services(event, callback=null) {
+    args = {};
+    args['customer_id'] = event.target.getAttribute('data-target');
+
+    api_url = prepare_api_get_url('get_today_customer_services', args);
+
+    if (callback == null) {
+        callback = get_today_customer_services_callback;
+    }
+
+    var ret = call_api(api_url, null, 'GET', callback);
+    print_api_result(ret);
+
+    return true
+}
+
 function populate_all_customers_list(response_data) {
     var idx = 0;
-    
+
     // Get the services element
     var services_list = document.getElementById('all-customers-list')
     services_list.innerHTML = '';
@@ -210,7 +285,7 @@ function get_all_customers_callback(response_data) {
 
 function get_all_customers(callback=null) {
     api_url = prepare_api_get_url('get_all_customers');
-    
+
     if (callback == null) {
         callback = get_all_customers_callback;
     }
@@ -224,7 +299,7 @@ function get_all_customers(callback=null) {
 
 function populate_services_manange_list(response_data) {
     var idx = 0;
-    
+
     // Get the services element
     var services_list = document.getElementById('services-manage-list')
     services_list.innerHTML = '';
@@ -246,6 +321,10 @@ function populate_services_list(response_data, dom_id) {
     // Get the services element
     var services_list = document.getElementById(dom_id);
     services_list.innerHTML = '';
+    var child = document.createElement('option');
+    child.innerHTML = "Service...";
+    services_list.appendChild(child);
+
     for (idx = 0; idx < response_data.length; idx++) {
         service = response_data[idx];
         var child = document.createElement('option');
@@ -261,7 +340,7 @@ function get_all_services_callback(response_data) {
 
 function get_all_services(callback=null) {
     api_url = prepare_api_get_url('get_all_services');
-    
+
     if (callback == null) {
         callback = get_all_services_callback;
     }
@@ -286,7 +365,6 @@ function populate_staff_manage_list(response_data) {
         child.innerHTML = staff.name;
         staff_list.appendChild(child);
     }
-
 }
 
 
@@ -298,6 +376,10 @@ function populate_staff_list(response_data, dom_id) {
     // Get the staff element
     var staff_list = document.getElementById(dom_id)
     staff_list.innerHTML = '';
+    var child = document.createElement('option');
+    child.innerHTML = "Staff...";
+    staff_list.appendChild(child);
+
     for (idx = 0; idx < response_data.length; idx++) {
         staff = response_data[idx];
         var child = document.createElement('option');
@@ -313,7 +395,7 @@ function get_all_staff_callback(response_data) {
 
 function get_all_staff(callback=null) {
     api_url = prepare_api_get_url('get_all_staff');
-    
+
     if (callback == null) {
         callback = get_all_staff_callback;
     }
@@ -332,12 +414,12 @@ function populate_customer_info(cst_info) {
         document.getElementById('cst_gender_male').selected = true;
     else if (cst_info.gender.toUpperCase() == 'FEMALE')
         document.getElementById('cst_gender_female').selected = true;
-    
+
     var cst_dob = new Date(cst_info.dob);
     if (isNaN(cst_dob.getUTCDate())) {
         document.getElementById('cst_dob').value = '';
     } else {
-        document.getElementById('cst_dob').value = cst_dob.getUTCDate() +'/' + (cst_dob.getUTCMonth() + 1); 
+        document.getElementById('cst_dob').value = cst_dob.getUTCDate() +'/' + (cst_dob.getUTCMonth() + 1);
     }
 
     var cst_anniversary = new Date(cst_info.anniversary);
@@ -345,7 +427,7 @@ function populate_customer_info(cst_info) {
         document.getElementById('cst_anniversary').value = '';
     }
     else {
-        document.getElementById('cst_anniversary').value = cst_anniversary.getUTCDate() +'/' + (cst_anniversary.getUTCMonth() + 1); 
+        document.getElementById('cst_anniversary').value = cst_anniversary.getUTCDate() +'/' + (cst_anniversary.getUTCMonth() + 1);
     }
 }
 
@@ -401,7 +483,7 @@ function add_new_customer() {
     args['cst_phone_1'] = document.getElementById('cst_phone_1').value;
     args['cst_phone_2'] = document.getElementById('cst_phone_2').value;
     args['cst_address'] = document.getElementById('cst_address').value;
-    args['cst_gender_idx'] = document.getElementById('cst_gender').selectedIndex; 
+    args['cst_gender_idx'] = document.getElementById('cst_gender').selectedIndex;
     args['cst_dob'] = document.getElementById('cst_dob').value;
     args['cst_anniversary'] = document.getElementById('cst_anniversary').value;
 
@@ -414,7 +496,7 @@ function add_new_customer() {
         display_cst_error('Please enter phone number');
         return
     }
-    
+
     if (args['cst_gender_idx'] == 0) {
         display_cst_error('Please select gender');
         return
@@ -444,10 +526,10 @@ function create_new_service_element(id, service, staff) {
     var span_fas_times = document.createElement('span');
     span_fas_times.classList.add('fas');
     span_fas_times.classList.add('fa-times');
-    
+
     delete_button.appendChild(span_fas_times);
     list_element.appendChild(span_button);
-    
+
     list_element.appendChild(document.createTextNode(' '));
 
     var span_name = document.createElement('span');
@@ -473,24 +555,25 @@ function add_new_cst_service() {
 
     var service = services_list.options[services_list.selectedIndex].innerHTML;
     var service_id = services_list.options[services_list.selectedIndex].value;
-    
+
     var staff_list = document.getElementById('cst_service_staff');
     if (staff_list.selectedIndex == 0)
         return;
 
     var staff = staff_list.options[staff_list.selectedIndex].innerHTML;
     var staff_id = staff_list.options[staff_list.selectedIndex].value;
-    
+
     var customer_id = document.getElementById('cst_id').value;
     var service_location = document.getElementById('cst_service_location').selectedIndex;
     if (service_location == 0)
         return;
 
     create_new_service_element(cst_service_count, service, staff);
-    cst_service_count = cst_service_count + 1; 
+    cst_service_count = cst_service_count + 1;
     cst_services.push({'customer_id': customer_id, 'staff_id': staff_id, 'service_id': service_id, 'location': service_location});
     services_list.selectedIndex = 0;
     staff_list.selectedIndex = 0;
+    document.getElementById('cst_service_location').selectedIndex = 0;
 }
 
 function cst_done() {
@@ -505,7 +588,7 @@ function cst_done() {
     reset_home_content();
 }
 
-function add_new_service_callback() {
+function service_update_callback() {
     get_all_services(populate_services_manange_list);
 }
 
@@ -517,8 +600,20 @@ function add_new_service() {
     args = {};
     args['service_name'] = service;
     args['service_price'] = 0;
-    api_url = prepare_api_get_url('add_new_service', args);    
-    var ret = call_api(api_url, null, 'GET', add_new_service_callback)
+    api_url = prepare_api_get_url('add_new_service', args);
+    var ret = call_api(api_url, null, 'GET', service_update_callback)
+    document.getElementById('service_name').value = '';
+}
+
+function delete_service() {
+    var service = document.getElementById('service_name').value;
+    if (service == '')
+        return;
+
+    args = {};
+    args['service_name'] = service;
+    api_url = prepare_api_get_url('delete_service', args);
+    var ret = call_api(api_url, null, 'GET', service_update_callback)
     document.getElementById('service_name').value = '';
 }
 

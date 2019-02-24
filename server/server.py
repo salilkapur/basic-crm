@@ -9,12 +9,10 @@ from pymysql import cursors, connect
 app = Flask(__name__)
 CORS(app)
 
-db_conn = None # For connection to sql database
-
 def connect_database():
     connection = connect(host='localhost',
-                         user='salil',
-                         password='s',
+                         user='server',
+                         password='server',
                          db='CRM',
                          cursorclass=cursors.DictCursor)
 
@@ -24,10 +22,8 @@ def connect_database():
     return connection
 
 def execute_query(query, args, ret_type):
-    global db_conn
 
-    if db_conn is None:
-        db_conn = connect_database()
+    db_conn = connect_database()
 
     with db_conn.cursor() as cursor:
         cursor.execute(query, args)
@@ -37,6 +33,9 @@ def execute_query(query, args, ret_type):
             result = cursor.fetchone()
         else:
             result = cursor.fetchall()
+        cursor.close()
+
+    db_conn.close()
 
     return result
 
@@ -47,7 +46,7 @@ def add_cors(resp):
     resp.headers['Access-Control-Allow-Origin'] = request.headers.get('Origin','*')
     resp.headers['Access-Control-Allow-Credentials'] = 'true'
     resp.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS, GET'
-    resp.headers['Access-Control-Allow-Headers'] = request.headers.get( 
+    resp.headers['Access-Control-Allow-Headers'] = request.headers.get(
         'Access-Control-Request-Headers', 'Authorization' )
     # set low for debugging
     if app.debug:
@@ -64,7 +63,7 @@ def authenticate_user():
 
     username = request.args.get('username')
     password = request.args.get('password')
-    
+
     query = "SELECT * FROM users WHERE username=%s AND password=%s"
     result = execute_query(query, (username, password), 'one')
 
@@ -97,9 +96,27 @@ def get_all_customers():
 
     return jsonify(result)
 
+@app.route('/get_today_customers')
+def get_today_customers():
+
+    query = "SELECT DISTINCT cst.name, cst.customer_id FROM transactions AS txn INNER JOIN customers AS cst ON cst.customer_id = txn.customer_id WHERE DATE(txn.txn_time) = UTC_DATE";
+    result = execute_query(query, (), 'all')
+
+    return jsonify(result)
+
+@app.route('/get_today_customer_services')
+def get_today_customer_services():
+
+    customer_id = request.args.get('customer_id');
+    query = "SELECT DISTINCT svc.name FROM transactions AS txn INNER JOIN customers AS cst ON cst.customer_id = txn.customer_id INNER JOIN services AS svc ON svc.service_id = txn.service_id WHERE DATE(txn.txn_time) = UTC_DATE AND cst.customer_id = %s";
+    result = execute_query(query, (customer_id), 'all')
+
+    return jsonify(result)
+
+
 @app.route('/get_today_stats')
 def get_today_stats():
-    
+
     final_result = {}
     query = "SELECT COUNT(DISTINCT customer_id) as customers from transactions WHERE DATE(txn_time)=UTC_DATE"
     result = execute_query(query, (), 'all')
@@ -120,17 +137,17 @@ def get_today_stats():
 @app.route('/search_customer')
 def search_customer():
     result = None
-    
+
     search_key = request.args.get('key')
     search_value = request.args.get('value')
-    
+
     if search_key == 'phone':
         result = search_customer_by_phone(search_value)
-    
+
     return jsonify(result)
 
 def search_customer_by_phone(search_value):
-    
+
     query = "SELECT customer_id, name, address, phone_1, phone_2, CAST(dob as char) as dob, IF(anniversary IS NULL, '', CAST(anniversary as char)) as anniversary, gender from customers WHERE phone_1=%s OR phone_2=%s"
     result = execute_query(query, (search_value, search_value), 'one')
 
@@ -139,19 +156,19 @@ def search_customer_by_phone(search_value):
 @app.route('/add_new_customer', methods=['GET'])
 def add_new_customer():
     args = request.args
-    query = "INSERT INTO customers (name, address, phone_1, phone_2, dob, anniversary, gender, create_on) VALUES (%s, %s, %s, %s, %s, %s, %s, UTC_TIMESTAMP)"
-    
+    query = "INSERT INTO customers (name, address, phone_1, phone_2, dob, anniversary, gender, created_on) VALUES (%s, %s, %s, %s, %s, %s, %s, UTC_TIMESTAMP)"
+
     gender = None
     if args.get('cst_gender_idx') == '1':
         gender = 'MALE'
     elif args.get('cst_gender_idx') == '2':
         gender = 'FEMALE'
-    
+
     if args.get('cst_dob') == '':
         dob = None
     else:
         dob = '-'.join(['9999', args.get('cst_dob').split('/')[1], args.get('cst_dob').split('/')[0]])
-    
+
     if args.get('cst_anniversary') == '':
         anniversary = None
     else:
@@ -167,7 +184,7 @@ def add_new_customer():
                       , 'one')
 
     return jsonify('true')
-    
+
 @app.route('/add_customer_transaction', methods=['GET'])
 def add_customer_transaction():
     customer_id = request.args.get('customer_id')
@@ -184,9 +201,18 @@ def add_customer_transaction():
 def add_new_service():
     service_name = request.args.get('service_name');
     service_price = request.args.get('service_price');
-    
+
     query = "INSERT INTO services (name, price) VALUES (%s, %s)"
     execute_query(query, (service_name, service_price), 'one')
+
+    return jsonify('true')
+
+@app.route('/delete_service', methods=['GET'])
+def delete_service():
+    service_name = request.args.get('service_name');
+
+    query = "DELETE FROM services WHERE name=%s"
+    execute_query(query, (service_name), 'one')
 
     return jsonify('true')
 
