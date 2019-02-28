@@ -5,6 +5,8 @@ NOTE: Server only understands UTC. All dates received and sent are assumed UTC
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from pymysql import cursors, connect
+from datetime import datetime
+from pytz import timezone, utc
 
 app = Flask(__name__)
 CORS(app)
@@ -38,6 +40,11 @@ def execute_query(query, args, ret_type):
     db_conn.close()
 
     return result
+
+def get_utc_date():
+    IN = datetime.now(timezone('Asia/Kolkata'))
+    IN_UTC = str(IN.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(utc))
+    return IN_UTC
 
 @app.after_request
 def add_cors(resp):
@@ -99,8 +106,8 @@ def get_all_customers():
 @app.route('/get_today_customers')
 def get_today_customers():
 
-    query = "SELECT DISTINCT cst.name, cst.customer_id FROM transactions AS txn INNER JOIN customers AS cst ON cst.customer_id = txn.customer_id WHERE DATE(txn.txn_time) = UTC_DATE";
-    result = execute_query(query, (), 'all')
+    query = "SELECT DISTINCT cst.name, cst.customer_id FROM transactions AS txn INNER JOIN customers AS cst ON cst.customer_id = txn.customer_id WHERE txn.txn_time=%s";
+    result = execute_query(query, (get_utc_date()), 'all')
 
     return jsonify(result)
 
@@ -108,8 +115,8 @@ def get_today_customers():
 def get_today_customer_services():
 
     customer_id = request.args.get('customer_id');
-    query = "SELECT DISTINCT svc.name FROM transactions AS txn INNER JOIN customers AS cst ON cst.customer_id = txn.customer_id INNER JOIN services AS svc ON svc.service_id = txn.service_id WHERE DATE(txn.txn_time) = UTC_DATE AND cst.customer_id = %s";
-    result = execute_query(query, (customer_id), 'all')
+    query = "SELECT DISTINCT svc.name FROM transactions AS txn INNER JOIN customers AS cst ON cst.customer_id = txn.customer_id INNER JOIN services AS svc ON svc.service_id = txn.service_id WHERE txn.txn_time=%s AND cst.customer_id = %s";
+    result = execute_query(query, (get_utc_date(), customer_id), 'all')
 
     return jsonify(result)
 
@@ -213,6 +220,19 @@ def delete_service():
 
     query = "DELETE FROM services WHERE name=%s"
     execute_query(query, (service_name), 'one')
+
+    return jsonify('true')
+
+@app.route('/add_new_staff', methods=['GET'])
+def add_new_staff():
+    args = request.args
+    query = "INSERT INTO staff (name, address, phone_1, joined_on, is_active) VALUES (%s, %s, %s, UTC_TIMESTAMP, %s)"
+
+    execute_query(query, (args.get('staff_name'),
+                          args.get('staff_address'),
+                          args.get('staff_phone_1'),
+                          1)
+                      , 'one')
 
     return jsonify('true')
 

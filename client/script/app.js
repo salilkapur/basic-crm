@@ -45,7 +45,8 @@ function prepare_api_get_url(api_url, args) {
 }
 
 function getUTCTime() {
-    var now = new Date();
+    var now = new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"});
+    now = new Date(now);
     return now.getUTCFullYear() +'/' + now.getUTCMonth() + '/' + now.getUTCDate();
 }
 
@@ -56,8 +57,10 @@ function hide_all_content() {
     document.getElementById('li-today').classList.remove('active');
     document.getElementById('customers-content').hidden = true;
     document.getElementById('li-customers').classList.remove('active');
-    document.getElementById('manage-content').hidden = true;
-    document.getElementById('li-manage').classList.remove('active');
+    document.getElementById('services-content').hidden = true;
+    document.getElementById('li-services').classList.remove('active');
+    document.getElementById('staff-content').hidden = true;
+    document.getElementById('li-staff').classList.remove('active');
 }
 
 function goto_today() {
@@ -86,12 +89,19 @@ function goto_customers() {
     get_all_customers();
 }
 
-function goto_manage() {
+function goto_services() {
     hide_all_content();
-    document.getElementById('manage-content').hidden = false;
-    document.getElementById('li-manage').classList.add('active');
+    document.getElementById('services-content').hidden = false;
+    document.getElementById('li-services').classList.add('active');
 
     get_all_services(populate_services_manange_list);
+}
+
+function goto_staff() {
+    hide_all_content();
+    document.getElementById('staff-content').hidden = false;
+    document.getElementById('li-staff').classList.add('active');
+
     get_all_staff(populate_staff_manage_list);
 }
 
@@ -103,16 +113,26 @@ function print_api_result(ret) {
         console.log('Unable to make API call')
 }
 
-function display_cst_error(message) {
-    var cst_error = document.getElementById('cst_error');
-    cst_error.hidden = false;
-    cst_error.innerHTML = message;
+function display_error(message, element_id=null) {
+    if (element_id == null) {
+        element_id = 'cst_error'
+    }
+
+    var error = document.getElementById(element_id);
+    error.hidden = false;
+    error.innerHTML = message;
 }
 
 function reset_cst_error() {
     var cst_error = document.getElementById('cst_error');
     cst_error.innerHTML = '';
     cst_error.hidden = true;
+}
+
+function reset_staff_error() {
+    var error = document.getElementById('staff_error');
+    error.innerHTML = '';
+    error.hidden = true;
 }
 
 function reset_cst_service_box() {
@@ -141,6 +161,12 @@ function reset_home_content() {
     reset_cst_information();
     document.getElementById('customer-service').hidden = true;
     reset_cst_service_box();
+}
+
+function reset_staff_information() {
+    document.getElementById('staff_name').value = '';
+    document.getElementById('staff_phone_1').value = '';
+    document.getElementById('staff_address').value = '';
 }
 
 // User authentication functions
@@ -446,7 +472,7 @@ function search_customer_callback(response_data) {
     else {
         // Show the add customer button.
         add_cst.hidden = false;
-        display_cst_error('Customer not found. Please add a new customer');
+        display_error('Customer not found. Please add a new customer');
     }
     reset_cst_service_box();
 }
@@ -461,7 +487,7 @@ function search_cst_phone() {
     if (document.getElementById('cst_phone_1').value == '' &&
         document.getElementById('cst_phone_2').value == '') {
 
-        display_cst_error('Please enter phone number');
+        display_error('Please enter phone number');
         return
     }
 
@@ -488,17 +514,17 @@ function add_new_customer() {
     args['cst_anniversary'] = document.getElementById('cst_anniversary').value;
 
     if (args['cst_name'] == '') {
-        display_cst_error('Please enter customer name');
+        display_error('Please enter customer name');
         return
     }
 
     if (args['cst_phone_1'] == '' && args['cst_phone_2'] == '') {
-        display_cst_error('Please enter phone number');
+        display_error('Please enter phone number');
         return
     }
 
     if (args['cst_gender_idx'] == 0) {
-        display_cst_error('Please select gender');
+        display_error('Please select gender');
         return
     }
 
@@ -615,6 +641,34 @@ function delete_service() {
     api_url = prepare_api_get_url('delete_service', args);
     var ret = call_api(api_url, null, 'GET', service_update_callback)
     document.getElementById('service_name').value = '';
+}
+
+function add_new_staff_callback() {
+    reset_staff_information();
+    get_all_staff(populate_staff_manage_list);
+}
+
+function add_new_staff() {
+    // Check all required fields are present
+    args = {}
+
+    reset_staff_error();
+    args['staff_name'] = document.getElementById('staff_name').value;
+    args['staff_phone_1'] = document.getElementById('staff_phone_1').value;
+    args['staff_address'] = document.getElementById('staff_address').value;
+
+    if (args['staff_name'] == '') {
+        display_error('Please enter staff name', 'staff_error');
+        return
+    }
+
+    if (args['staff_phone_1'] == '') {
+        display_error('Please enter phone number', 'staff_error');
+        return
+    }
+
+    api_url = prepare_api_get_url('add_new_staff', args);
+    var ret = call_api(api_url, null, 'GET', add_new_staff_callback);
 }
 
 function init_main() {

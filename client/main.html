@@ -25,8 +25,11 @@
                         <li id='li-customers'>
                             <a onclick="goto_customers()">Clients</a>
                         </li>
-                        <li id='li-manage'>
-                            <a onclick="goto_manage()">Manage</a>
+                        <li id='li-services'>
+                            <a onclick="goto_services()">Services</a>
+                        </li>
+                        <li id='li-staff'>
+                            <a onclick="goto_staff()">Staff</a>
                         </li>
                     </ul>
                 </div>
@@ -193,7 +196,7 @@
                 </div>
             </div>
 
-            <div class="container container-fluid" id="manage-content" hidden>
+            <div class="container container-fluid" id="services-content" hidden>
                 <div class="row content-box">
                     <div id='services-column' class='col-6 custom-col'>
                         <h1 class="display-4">Services</h1>
@@ -209,10 +212,45 @@
                         <div class="list-group list-group-custom customer-form-row" id='services-manage-list'>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div class="container container-fluid" id="staff-content" hidden>
+                <div class="row content-box">
                     <div id='staff-column' class='col-4 custom-col'>
                         <h1 class="display-4">Staff</h1>
                         <div class="list-group list-group-custom" id='staff-manage-list'>
                         </div>
+                    </div>
+                    <div id='new-staff-column' class='col-4 custom-col'>
+                        <form>
+                            <div class="row customer-form-row">
+                                <div class="col">
+                                    <input id="staff_name" type="text" class="form-control" placeholder="Name">
+                                    <input id="staff_id" type="text" class="form-control" hidden>
+                                </div>
+                            </div>
+                            <div class="row customer-form-row">
+                                <div class="col">
+                                    <input id="staff_phone_1" type="text" class="form-control" placeholder="Phone No. 1">
+                                </div>
+                            </div>
+                            <div class="row customer-form-row">
+                                <div class="col">
+                                    <input id="staff_address" type="textarea" class="form-control" placeholder="Address">
+                                </div>
+                            </div>
+                            <div class="row customer-form-row">
+                                <label class="col" id="staff_error" style="color: red" hidden></label>
+                            </div>
+                                <div class="row customer-form-row">
+                                <div class="col">
+                                     <button type="button" id="btn_search"
+                                         class="btn btn-secondary mb-1"
+                                         onclick="add_new_staff()">Add Staff</button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -225,7 +263,9 @@
                 $('#cst_anniversary').datepicker({
                     format: 'dd/mm'
                 });
-
+                $('#staff_dob').datepicker({
+                    format: 'dd/mm'
+                });
             });
         </script>
     </body>
