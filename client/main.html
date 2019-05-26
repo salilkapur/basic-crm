@@ -9,6 +9,10 @@
     <link rel="stylesheet" type="text/css" href="datepicker/css/datepicker.css">
     <link href="js/google-code-prettify/prettify.css" rel="stylesheet">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
     <title>CRM</title>
     <body>
         <div class="wrapper">
@@ -184,16 +188,128 @@
                 </br>
                 <h3 class="display-4">Clients</h3>
                 <div class="row customer-form-row">
-                    <div class="list-group list-group-custom-long col-3" id='today-customers-list'>
+                    <div class="list-group list-group-custom-long col-4" id='today-customers-list'>
                     </div>
-                    <div class="list-group list-group-custom-long col-3" id='today-customer-service-list'>
+                    <div class="list-group list-group-custom-long col-4" id='today-customer-service-list'>
                     </div>
                 </div>
             </div>
             <div class="container container-fluid customer-form-row" id="customers-content" hidden>
-                <h1 class="display-4">Clients</h1>
-                <div class="list-group list-group-custom-long col-6" id='all-customers-list'>
+                <div class="row content-box" id="client_page">
+                    <div class="col-6 custom-col">
+                        <h1 class="display-4">Clients</h1>
+                        <div class="list-group list-group-custom-long" id='all-customers-list'></div>
+                    </div>
+                    <div class="col-4 custom-col">
+                        <form >
+                            <div class="row customer-form-row">
+                                <div class="col">
+                                    <input id="search_name" type="text" class="form-control" placeholder="Enter name or phone number">
+                                </div>
+                                <div class="col">
+                                    <select id="cst_search_location" class="form-control">
+                                        <option selected>Location...</option>
+                                        <option selected>Chuna Bhatti</option>
+                                        <option selected>Lal Ghati</option>
+                                    </select>
+                                </div>
+                            </div>
+
+     
+                            <div class="row customer-form-row">
+                                <div class="col">
+                                     <button type="button" id="rel_serach"
+                                         class="btn btn-secondary mb-1"
+                                         onclick="client_search()">Search</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                 </div>
+            </div>
+            <div id="editModal" class="modal">
+              <div class="modal-content">
+                <span class="close">&times;</span>
+                    <form id="editForm">
+                        <div class="row customer-form-row">
+                            <div class="col-sm-6">
+                                <input id="edit_cst_name" type="text" class="form-control" placeholder="Name">
+                                <input id="edit_cst_id" type="text" class="form-control" hidden>
+                            </div>
+                        </div>
+                        <div class="row customer-form-row">
+                            <div class="col">
+                                <input id="edit_cst_phone_1" type="text" class="form-control" placeholder="Phone No. 1">
+                            </div>
+                            <div class="col">
+                                <input id="edit_cst_phone_2" type="text" class="form-control" placeholder="Phone No. 2">
+                            </div>
+                        </div>
+                        <div class="row customer-form-row">
+                            <div class="col">
+                                <input id="edit_cst_address" type="textarea" class="form-control" placeholder="Address">
+                            </div>
+                        </div>
+                        <div class="row customer-form-row">
+                            <div class="col">
+                                <input id="edit_cst_dob" class="form-control span2" size="12" type="text" placeholder="Birthday">
+                            </div>
+                            <div class="col">
+                                <input id="edit_cst_anniversary" class="form-control span2" size="12" type="text" placeholder="Anniversary">
+                            </div>
+                            <div class="col">
+                                <select id="edit_cst_gender" class="form-control">
+                                    <option selected>Gender...</option>
+                                    <option id='edit_cst_gender_male'>Male</option>
+                                    <option id='edit_cst_gender_female'>Female</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row customer-form-row">
+                            <label class="col" id="edit_customer_not_found" style="color: red" hidden>Customer not found! Please add new customer</label>
+                            <label class="col" id="edit_customer" style="color: green" hidden>Saved Changes!</label>
+                            <label class="col" id="edit_cst_error" style="color: red" hidden></label>
+                        </div>
+                        <div class="row customer-form-row">
+                            <div class="col">
+                                 <button type="button" id="edit_btn_save" class="btn btn-secondary mb-1" >Save</button>
+                                 <button type="button" id="edit_btn_add_cst" class="btn btn-secondary mb-1" onclick="add_new_customer()"  hidden>Add Customer</button>
+                            </div>
+                        </div>
+                    </form>
+              </div>
+
+            </div>
+            <div id="viewModal" class="modal">  
+                <div class="modal-content" id="viewModalContent">
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a data-toggle="tab" href="#infoTab">INFO</a></li>
+                        <li ><a data-toggle="tab" href="#serviceTab">Services</a></li>
+                    </ul>
+                    <div class="tab-content" id="viewTabContent">
+                        <div id="infoTab" class="tab-pane fade in active" >
+                            <dl class="dl-horizontal">
+                                <dt>Name:</dt>
+                                <dd id='viewName'></dd>
+                                <dt>Gender:</dt>
+                                <dd id='viewGender'></dd>
+                                <dt>Phone 1:</dt>
+                                <dd id='viewPhone_1'></dd>
+                                <dt>Phone 2:</dt>
+                                <dd id='viewPhone_2'></dd>
+                                <dt>Address:</dt>
+                                <dd id='viewAddress'></dd>
+                                <dt>Birthday:</dt>
+                                <dd id='viewDob'></dd>
+                                <dt>Anniversary:</dt>
+                                <dd id='viewAnniversary'></dd>
+                            </dl>
+                        </div>
+                        <div id="serviceTab" class="tab-pane fade" >
+                            <div class="list-group list-group-custom" id='view_service_list'></div>
+                        </div>
+                    </div> 
+                  </div>
             </div>
 
             <div class="container container-fluid" id="services-content" hidden>
@@ -255,6 +371,70 @@
                 </div>
             </div>
         </div>
+        <div id="editModalStaff" class="modal">
+              <div class="modal-content">
+                <span class="close">&times;</span>
+                    <form>
+                        <div class="row customer-form-row">
+                            <div class="col">
+                                <input id="staff_name_modal" type="text" class="form-control" placeholder="Name">
+                                <input id="staff_id_modal" type="text" class="form-control" hidden>
+                            </div>
+                        </div>
+                        <div class="row customer-form-row">
+                            <div class="col">
+                                <input id="staff_phone_1_modal" type="text" class="form-control" placeholder="Phone No. 1">
+                            </div>
+                        </div>
+                        <div class="row customer-form-row">
+                            <div class="col">
+                                <input id="staff_address_modal" type="textarea" class="form-control" placeholder="Address">
+                            </div>
+                        </div>
+                        <div class="row customer-form-row">
+                            <div class="col">
+                                <input type="checkbox" id="staff_active_modal" class="form-control"> Active
+                            </div>
+                        </div>
+
+                        <div class="row customer-form-row">
+                            <label class="col" id="staff_error_modal" style="color: red" hidden></label>
+                        </div>
+                            <div class="row customer-form-row">
+                            <div class="col">
+                                 <button type="button" id="btn_search_staff"
+                                     class="btn btn-secondary mb-1">Save</button>
+                            </div>
+                        </div>
+                    </form>
+              </div>
+
+            </div>
+            <div id="viewModalStaff" class="modal">  
+                <div class="modal-content" id="viewModalContent">
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a data-toggle="tab" href="#infoTabStaff">INFO</a></li>
+                        <li ><a data-toggle="tab" href="#serviceTabStaff">Services</a></li>
+                    </ul>
+                    <div class="tab-content" id="viewTabContent">
+                        <div id="infoTabStaff" class="tab-pane fade in active" >
+                            <dl class="dl-horizontal">
+                                <dt>Name:</dt>
+                                <dd id='viewStaffName'></dd>
+                                <dt>Phone 1:</dt>
+                                <dd id='viewStaffPhone_1'></dd>
+                                <dt>Address:</dt>
+                                <dd id='viewStaffAddress'></dd>
+                                <dt>Active:</dt>
+                                <dd id="viewActive"></dd>
+                            </dl>
+                        </div>
+                        <div id="serviceTabStaff" class="tab-pane fade" >
+                            <div class="list-group list-group-custom" id='view_service_list'></div>
+                        </div>
+                    </div> 
+                  </div>
+            </div>
         <script type="text/javascript">
             $(function() {
                 $('#cst_dob').datepicker({

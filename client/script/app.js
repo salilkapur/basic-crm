@@ -1,7 +1,8 @@
 /* Basic configuration.
  * This should be moved to a separate file ASAP.
  */
-api_base_url = 'http://34.226.121.100:5000/'
+// api_base_url = 'http://34.226.121.100:5000/'
+api_base_url = 'http://0.0.0.0:5000/'
 
 // This is global variable used to keep track of the number of services for a customer
 cst_service_count = 0;
@@ -16,6 +17,7 @@ function call_api(url, data, method, callback) {
         request.open('GET', url, true)
     }
     else {
+
         return false
     }
 
@@ -30,6 +32,7 @@ function call_api(url, data, method, callback) {
     }
 
     request.send()
+    // console.log("yeah")     
 
     return true
 }
@@ -85,6 +88,7 @@ function goto_customers() {
     hide_all_content();
     document.getElementById('customers-content').hidden = false;
     document.getElementById('li-customers').classList.add('active');
+    document.getElementById('cst_search_location').selectedIndex = 0
 
     get_all_customers();
 }
@@ -117,6 +121,15 @@ function display_error(message, element_id=null) {
     if (element_id == null) {
         element_id = 'cst_error'
     }
+    else if (element_id == 'staff_error'){
+        element_id = 'staff_error'
+    }
+    else if (element_id == 'staff_error_modal'){
+        element_id = 'staff_error_modal'        
+    }
+    else {
+        element_id = 'edit_cst_error'
+    }
 
     var error = document.getElementById(element_id);
     error.hidden = false;
@@ -125,6 +138,9 @@ function display_error(message, element_id=null) {
 
 function reset_cst_error() {
     var cst_error = document.getElementById('cst_error');
+    cst_error.innerHTML = '';
+    cst_error.hidden = true;
+    var cst_error = document.getElementById('edit_cst_error');
     cst_error.innerHTML = '';
     cst_error.hidden = true;
 }
@@ -204,6 +220,23 @@ function get_today_stats(callback=null) {
     return true
 }
 
+function client_search_callback(res){
+    populate_all_customers_list(res, 1)
+}
+
+function client_search(){
+    var location = document.getElementById('cst_search_location');
+    var search_text = document.getElementById('search_name').value;
+    var index = location.selectedIndex;
+    args = {};
+    args['location'] = index;
+    args['search_text'] = search_text;
+
+    api_url = prepare_api_get_url('client_search', args);
+    var ret = call_api(api_url, null, 'GET', client_search_callback);
+
+}
+
 function populate_customers_today_list(response_data) {
     var idx = 0;
 
@@ -230,7 +263,7 @@ function populate_customers_today_list(response_data) {
 }
 
 function get_today_customers_list_callback(response_data) {
-    populate_customers_today_list(response_data);
+    populate_all_customers_list(response_data, 2);
 }
 
 function get_today_customers_list(callback=null) {
@@ -278,16 +311,95 @@ function get_today_customer_services(event, callback=null) {
 
     return true
 }
+function edit_customer_callback(res){
 
-function populate_all_customers_list(response_data) {
+    var editlabel = document.getElementById("edit_customer");
+    if (res.toString().localeCompare('false') == 0){
+        // console.log("in if")
+        display_error('Number already exists')
+
+    }
+    else{
+
+        editlabel.hidden = false;
+    }
+}
+
+function edit_cst_info(ph1, ph2){
+    args = {}
+
+    reset_cst_error();
+    args['key1'] = ph1;
+    args['key2'] = ph2;
+    args['cst_name'] = document.getElementById('edit_cst_name').value;
+    args['cst_phone_1'] = document.getElementById('edit_cst_phone_1').value;
+    args['cst_phone_2'] = document.getElementById('edit_cst_phone_2').value;
+    args['cst_address'] = document.getElementById('edit_cst_address').value;
+    args['cst_gender_idx'] = document.getElementById('edit_cst_gender').selectedIndex;
+    args['cst_dob'] = document.getElementById('edit_cst_dob').value;
+    args['cst_anniversary'] = document.getElementById('edit_cst_anniversary').value;
+
+    if (args['cst_name'] == '') {
+        display_error('Please enter customer name');
+        return
+    }
+
+    if (args['cst_phone_1'] == '' && args['cst_phone_2'] == '') {
+        display_error('Please enter phone number');
+        return
+    }
+
+    if (args['cst_gender_idx'] == 0) {
+        display_error('Please select gender');
+        return
+    }
+
+    api_url = prepare_api_get_url('edit_customer', args);
+    var ret = call_api(api_url, null, 'GET', edit_customer_callback);
+
+
+}
+
+function populate_all_customers_list(response_data, id) {
     var idx = 0;
 
     // Get the services element
-    var services_list = document.getElementById('all-customers-list')
+    var services_list = '';
+    if (id == 1){
+        services_list = document.getElementById('all-customers-list')
+    }
+    else if (id == 2){
+        services_list = document.getElementById('today-customers-list')
+    }
+    
+    var modal = document.getElementById("editModal");
+    var editlabel = document.getElementById("edit_customer");
+    var span = document.getElementsByClassName("close")[0];
+    span.onclick = function() {
+      modal.style.display = "none";
+    }
+
+    var viewmodal = document.getElementById("viewModal");
+    window.onclick = function(event) {
+      if (event.target == viewmodal) {
+        viewmodal.style.display = "none";
+        var viewList = document.getElementById("view_service_list");
+        while (viewList.firstChild) {
+            viewList.removeChild(viewList.firstChild);
+        }
+      }
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
+    }
+
     services_list.innerHTML = '';
+    
+
     for (idx = 0; idx < response_data.length; idx++) {
         service = response_data[idx];
         var child = document.createElement('div');
+
         child.classList.add('list-group-item');
         child.classList.add('list-group-item-action');
         var name_label = document.createElement('label');
@@ -300,13 +412,181 @@ function populate_all_customers_list(response_data) {
         if (service.phone_2 != '') {
             phone_label.innerHTML += ', ' + service.phone_2;
         }
+
         child.appendChild(phone_label);
+        child.append(document.createElement('br'));
+        var edit_btn = document.createElement('button');
+        edit_btn.classList.add('btn');
+        edit_btn.classList.add('btn-default');
+        edit_btn.classList.add('btn-sm');
+        edit_btn.innerHTML = "Edit ";
+        edit_btn.id = "edit_btn" + service.phone_1.toString();
+        // console.log(edit_btn.id);
+        var edit_span = document.createElement('span');
+        edit_span.classList.add('glyphicon')
+        edit_span.classList.add('glyphicon-edit')
+        edit_btn.appendChild(edit_span);
+        edit_btn.style.margin = "10px"
+        child.append(edit_btn)
+        edit_btn.onclick = (function(service){
+            return function(){
+                editlabel.hidden = true;
+                modal.style.display = "block";
+                populate_customer_editinfo(service);
+            }
+        })(service);
+
+        var view_btn = document.createElement('button');
+        view_btn.classList.add('btn');
+        view_btn.classList.add('btn-default');
+        view_btn.classList.add('btn-sm');
+        view_btn.innerHTML = "View ";
+        var view_span = document.createElement('span');
+        view_span.classList.add('glyphicon');
+        view_span.classList.add('glyphicon-eye-open');
+        view_btn.appendChild(view_span);
+        view_btn.style.margin = "10px";
+        child.append(view_btn);
+         view_btn.onclick = (function(service){
+            return function(){
+               viewmodal.style.display = "block";
+               document.getElementById("infoTab").click()
+               populate_customer_viewinfo(service);
+
+            }
+        })(service);
         services_list.appendChild(child);
     }
 }
 
+function get_transaction_user_callback(res){
+    var txn_list = document.getElementById('view_service_list')
+
+    for (idx = 0; idx < res.length; idx++){
+        service = res[idx];
+        var child = document.createElement('div');
+
+        child.classList.add('list-group-item');
+        child.classList.add('list-group-item-action');
+        var info_card = document.createElement('dl');
+        info_card.classList.add('dl-horizontal');
+
+        var info_name = document.createElement('dt');
+        info_name.innerHTML = 'Service';
+        info_card.appendChild(info_name);
+        var info_name_res = document.createElement('dd');
+        info_name_res.innerHTML = service.srv_name;
+        info_card.appendChild(info_name_res);
+
+        var service_price = document.createElement('dt');
+        service_price.innerHTML = 'Price';
+        info_card.appendChild(service_price);
+        var service_price_res = document.createElement('dd');
+        service_price_res.innerHTML = service.srv_price;
+        info_card.appendChild(service_price_res);
+
+        var staff_name = document.createElement('dt');
+        staff_name.innerHTML = 'Staff name';
+        info_card.appendChild(staff_name);
+        var staff_name_res = document.createElement('dd');
+        staff_name_res.innerHTML = service.staff_name;
+        info_card.appendChild(staff_name_res);
+
+        var txn_date = document.createElement('dt');
+        txn_date.innerHTML = 'Date';
+        info_card.appendChild(txn_date);
+        var txn_date_res = document.createElement('dd');
+        txn_date_res.innerHTML = service.txn_time;
+        info_card.appendChild(txn_date_res);
+
+        var location = document.createElement('dt');
+        location.innerHTML = 'Location';
+        info_card.appendChild(location);
+        var location_res = document.createElement('dd');
+        if (service.location == 1){
+            location_res.innerHTML = 'Chuna Bhatti';
+        }
+        else if (service.location == 2){
+            location_res.innerHTML = 'Lal Ghati';
+        }
+        info_card.appendChild(location_res);
+
+        child.appendChild(info_card);
+        txn_list.appendChild(child);
+
+    }
+
+}
+
+function populate_customer_viewinfo(cst_info){
+
+    args = {}
+
+    reset_cst_error();
+    args['cst_id'] = cst_info.customer_id
+
+    document.getElementById('viewName').innerHTML = cst_info.name;
+    document.getElementById('viewPhone_1').innerHTML = cst_info.phone_1;
+    document.getElementById('viewPhone_2').innerHTML = cst_info.phone_2;
+    document.getElementById('viewGender').innerHTML = cst_info.gender.toString();
+    // if (cst_info.address != '')
+    document.getElementById('viewAddress').innerHTML = cst_info.address;
+    var cst_dob = new Date(cst_info.dob);
+    if (isNaN(cst_dob.getUTCDate())) {
+        document.getElementById('viewDob').innerHTML = '-';
+    } else {
+        document.getElementById('viewDob').innerHTML = cst_dob.getUTCDate() +'/' + (cst_dob.getUTCMonth() + 1);
+    }
+
+    var cst_anniversary = new Date(cst_info.anniversary);
+    if (isNaN(cst_anniversary.getUTCDate())) {
+        document.getElementById('viewAnniversary').innerHTML = '-';
+    }
+    else {
+        document.getElementById('viewAnniversary').innerHTML = cst_anniversary.getUTCDate() +'/' + (cst_anniversary.getUTCMonth() + 1);
+    }
+    api_url = prepare_api_get_url('get_transaction_user', args);
+    var ret = call_api(api_url, null, 'GET', get_transaction_user_callback);
+
+}
+
+function populate_customer_editinfo(cst_info) {
+    document.getElementById('edit_cst_id').value = cst_info.customer_id;
+    document.getElementById('edit_cst_name').value = cst_info.name;
+    document.getElementById('edit_cst_phone_1').value = cst_info.phone_1;
+    document.getElementById('edit_cst_phone_2').value = cst_info.phone_2;
+    // if (cst_info.address != '')
+    document.getElementById('edit_cst_address').value = cst_info.address;
+
+    if (cst_info.gender.toString().toUpperCase() == 'MALE')
+        document.getElementById('edit_cst_gender_male').selected = true;
+    else if (cst_info.gender.toString().toUpperCase().toString() == 'FEMALE')
+        document.getElementById('edit_cst_gender_female').selected = true;
+
+    var cst_dob = new Date(cst_info.dob);
+    if (isNaN(cst_dob.getUTCDate())) {
+        document.getElementById('edit_cst_dob').value = '';
+    } else {
+        document.getElementById('edit_cst_dob').value = cst_dob.getUTCDate() +'/' + (cst_dob.getUTCMonth() + 1);
+    }
+
+    var cst_anniversary = new Date(cst_info.anniversary);
+    if (isNaN(cst_anniversary.getUTCDate())) {
+        document.getElementById('edit_cst_anniversary').value = '';
+    }
+    else {
+        document.getElementById('edit_cst_anniversary').value = cst_anniversary.getUTCDate() +'/' + (cst_anniversary.getUTCMonth() + 1);
+    }
+    var save_btn = document.getElementById("edit_btn_save");
+    save_btn.onclick = function(){
+            edit_cst_info(cst_info.phone_1, cst_info.phone_2);
+    };
+
+
+}
+
 function get_all_customers_callback(response_data) {
-    populate_all_customers_list(response_data);
+    populate_all_customers_list(response_data, 1);
 }
 
 function get_all_customers(callback=null) {
@@ -314,6 +594,24 @@ function get_all_customers(callback=null) {
 
     if (callback == null) {
         callback = get_all_customers_callback;
+    }
+
+    var ret = call_api(api_url, null, 'GET', callback);
+    print_api_result(ret);
+
+    return true
+
+}
+function get_today_customers_callback(res){
+    populate_all_customers_list(response_data, 2);
+}
+
+function get_today_customers(callback=null) {
+    api_url = prepare_api_get_url('get_today_customers');
+
+    if (callback == null) {
+        callback = get_today_customers_callback;
+
     }
 
     var ret = call_api(api_url, null, 'GET', callback);
@@ -379,8 +677,29 @@ function get_all_services(callback=null) {
 
 function populate_staff_manage_list(response_data) {
     var idx = 0;
-
+    console.log("yes")
     // Get the staff element
+    var checkbox = document.getElementById("staff_active_modal");
+    var modal = document.getElementById("editModalStaff");
+    var editlabel = document.getElementById("staff_error_modal");
+    var span = document.getElementsByClassName("close")[0];
+    span.onclick = function() {
+      modal.style.display = "none";
+    }
+
+    var viewmodal = document.getElementById("viewModalStaff");
+    window.onclick = function(event) {
+      if (event.target == viewmodal) {
+        viewmodal.style.display = "none";
+        var viewList = document.getElementById("view_service_list");
+        while (viewList.firstChild) {
+            viewList.removeChild(viewList.firstChild);
+        }
+      }
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
+    }
     var staff_list = document.getElementById('staff-manage-list');
     staff_list.innerHTML = '';
     for (idx = 0; idx < response_data.length; idx++) {
@@ -389,11 +708,112 @@ function populate_staff_manage_list(response_data) {
         child.classList.add('list-group-item');
         child.classList.add('list-group-item-action');
         child.innerHTML = staff.name;
+
+        child.append(document.createElement('br'));
+        var phone_label = document.createElement('label');
+        phone_label.classList.add('gray-color');
+        phone_label.innerHTML = staff.phone_1;
+
+        child.appendChild(phone_label);
+        child.append(document.createElement('br'));
+        var edit_btn = document.createElement('button');
+        edit_btn.classList.add('btn');
+        edit_btn.classList.add('btn-default');
+        edit_btn.classList.add('btn-sm');
+        edit_btn.innerHTML = "Edit ";
+        edit_btn.id = "edit_btn";
+        // console.log(edit_btn.id);
+        var edit_span = document.createElement('span');
+        edit_span.classList.add('glyphicon')
+        edit_span.classList.add('glyphicon-edit')
+        edit_btn.appendChild(edit_span);
+        edit_btn.style.margin = "10px"
+        child.append(edit_btn)
+        edit_btn.onclick = (function(staff){
+            return function(){
+                editlabel.hidden = true;
+                checkbox.checked = false;
+                modal.style.display = "block";
+                populate_staff_editinfo(staff);
+            }
+        })(staff);
+
+        var view_btn = document.createElement('button');
+        view_btn.classList.add('btn');
+        view_btn.classList.add('btn-default');
+        view_btn.classList.add('btn-sm');
+        view_btn.innerHTML = "View ";
+        var view_span = document.createElement('span');
+        view_span.classList.add('glyphicon');
+        view_span.classList.add('glyphicon-eye-open');
+        view_btn.appendChild(view_span);
+        view_btn.style.margin = "10px";
+        child.append(view_btn);
+        view_btn.onclick = (function(staff){
+            return function(){
+               viewmodal.style.display = "block";
+               document.getElementById("infoTab").click()
+               populate_staff_viewinfo(staff);
+
+            }
+        })(staff);
+
         staff_list.appendChild(child);
     }
 }
 
+function edit_staff_info(ph1){
+    args = {}
+    args['key'] = ph1
+    args['staff_id'] = document.getElementById('staff_id_modal').value;
+    args['staff_name'] = document.getElementById('staff_name_modal').value;
+    args['staff_address'] = document.getElementById('staff_address_modal').value;
+    args['staff_phone_1'] = document.getElementById('staff_phone_1_modal').value;
+    if (document.getElementById('staff_active_modal').selected == true){
+        args['staff_active'] = 1;
+    }
+    else{
+        args['staff_active'] = 0;
+    }
+    if (args['staff_name'] == '') {
+        display_error('Please enter staff name', 'staff_error_modal');
+        return
+    }
 
+    if (args['staff_phone_1'] == '') {
+        display_error('Please enter phone number', 'staff_error_modal');
+        return
+    }
+
+    api_url = prepare_api_get_url('edit_staff_info', args);
+    var ret = call_api(api_url, null, 'GET', null);
+
+}
+
+function populate_staff_editinfo(res){
+    // console.log(res.staff_id)
+    // console.log(res.name)
+    // console.log(res.phone_1)
+    // console.log(res.address)
+    document.getElementById('staff_id_modal').value = res.staff_id;
+    document.getElementById('staff_name_modal').value = res.name;
+    document.getElementById('staff_phone_1_modal').value = res.phone_1;
+    document.getElementById('staff_address_modal').value = res.address;
+    if (res.is_active == 1){
+        document.getElementById('staff_active_modal').checked = true;
+    }
+    else{
+        document.getElementById('staff_active_modal').checked = false;
+
+    }
+    
+    var save_btn = document.getElementById('btn_search_staff');
+    save_btn.onclick = function(){
+            edit_staff_info(res.phone_1);
+    };
+
+
+}
 // Hopefully this is generic enough
 function populate_staff_list(response_data, dom_id) {
     // We have all the staff. Populate the page with the data
@@ -481,6 +901,7 @@ function search_cst_phone() {
     args = {};
     args['key'] = 'phone';
     args['value'] = document.getElementById('cst_phone_1').value;
+    // args['name_value'] = document.getElementById('cst_name').value;
 
     reset_cst_error();
 
@@ -495,9 +916,18 @@ function search_cst_phone() {
     var ret = call_api(api_url, null, 'GET', search_customer_callback);
 }
 
-function add_new_customer_callback() {
+function add_new_customer_callback(res) {
     // New customer added. Search for the customer.
-    search_cst_phone();
+    // console.log("ere")
+    // console.log(res)
+    if (res.toString().localeCompare('false') == 0){
+        // console.log("in if")
+        display_error('Number already exists')
+
+    }
+    else{
+        search_cst_phone();
+    }
 }
 
 function add_new_customer() {
@@ -674,6 +1104,6 @@ function add_new_staff() {
 function init_main() {
 
     get_all_services();
-    get_all_staff();
+    get_all_staff(populate_staff_manage_list);
 
 }

@@ -126,3 +126,16 @@ ul ul a {
 .float-right {
     float: right !important;
 }
+
+.modal{
+    padding: 10%;
+    overflow-y: auto;
+    height: 100%;
+}
+
+#editForm{
+    padding: 10px;
+}
+#client_page{
+    margin-top: 1%;
+}

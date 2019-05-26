@@ -32,7 +32,7 @@ h2 {
 /* STRUCTURE */
 
 .wrapper {
-    margin-top: 200px;
+    margin-top: 50px;
     display: flex;
     align-items: center;
     flex-direction: column; 
@@ -181,4 +181,10 @@ input[type=text]:placeholder {
 #icon {
     width:60%;
 }
+/*.center {
+  margin-top: 20%;
+  margin-bottom: 20%;
+  border: 3px solid #73AD21;
+  padding: 10px;
+}*/
 
