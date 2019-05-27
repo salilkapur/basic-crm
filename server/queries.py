@@ -42,16 +42,12 @@ class Query:
 
 
 	def connect_database(self):
-		# connection = connect(host='localhost',
-		# 					 user='server',
-		# 					 password='server',
-		# 					 db='CRM',
-		# 					 cursorclass=cursors.DictCursor)
 		connection = connect(host='localhost',
-							 user='root',
-							 password='gompas_123',
+							 user='server',
+							 password='server',
 							 db='CRM',
 							 cursorclass=cursors.DictCursor)
+		
 
 		# This is to avoid repeatable read in mysql server
 		connection.autocommit(True)
@@ -91,7 +87,7 @@ class Query:
 		return jsonify(result)
 
 	def get_all_staff(self):
-		query = "SELECT * FROM staff ORDER BY name"
+		query = "SELECT staff_id, name, address, phone_1, joined_on, CAST(is_active AS UNSIGNED) as is_active FROM staff ORDER BY name"
 		result = self.execute_query(query, (), 'all')
 
 		return jsonify(result)
@@ -234,7 +230,7 @@ class Query:
 		self.execute_query(query, arg, 'one')
 	
 	def edit_staff_info(self, arg, is_active):
-		print type(is_active)
+		print (is_active)
 		if (is_active == 1):
 			query = "UPDATE staff SET name = %s, address = %s, phone_1 = %s, is_active = b'1' WHERE (phone_1=%s AND phone_1!='')"
 		elif (is_active == 0):

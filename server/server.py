@@ -221,7 +221,7 @@ def get_transaction_staff():
 def add_new_staff():
     args = request.args
     
-    query.add_new_staff((args.get('staff_name'),args.get('staff_address'),args.get('staff_phone_1'),1))
+    query.add_new_staff((args.get('staff_name'),args.get('staff_address'),args.get('staff_phone_1'),"b'1'"))
 
     return jsonify('true')
 
