@@ -209,6 +209,13 @@ def edit_staff_info():
 
     return jsonify('true')
 
+@app.route('/get_transaction_staff', methods=['GET'])
+def get_transaction_staff():
+    args = request.args
+    
+    result = query.get_transaction_staff(args.get('staff_id'))
+
+    return jsonify(result)
 
 @app.route('/add_new_staff', methods=['GET'])
 def add_new_staff():

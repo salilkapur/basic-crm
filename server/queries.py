@@ -241,7 +241,10 @@ class Query:
 			query = "UPDATE staff SET name = %s, address = %s, phone_1 = %s, is_active = b'0' WHERE (phone_1=%s AND phone_1!='')"	
 		self.execute_query(query, arg, 'one')
 
+	def get_transaction_staff(self, arg):
+		query = "SELECT txn.transaction_id as transaction_id, txn.staff_id, txn.customer_id, txn.service_id, txn.location as location, txn.txn_time as txn_time, srv.name as srv_name, srv.price as srv_price, st.name as staff_name, cst.name as cust_name From transactions txn, customers cst, services srv, staff st WHERE txn.customer_id = cst.customer_id AND txn.service_id = srv.service_id AND txn.staff_id = st.staff_id AND st.staff_id = %s ORDER BY txn.txn_time DESC "
+		result = self.execute_query(query, (arg), 'all')
 
-
+		return result
 
 	

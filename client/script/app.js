@@ -762,6 +762,79 @@ function populate_staff_manage_list(response_data) {
     }
 }
 
+function get_transaction_staff_callback(res){
+    var txn_list = document.getElementById('view_service_list_staff')
+
+    for (idx = 0; idx < res.length; idx++){
+        service = res[idx];
+        var child = document.createElement('div');
+
+        child.classList.add('list-group-item');
+        child.classList.add('list-group-item-action');
+        var info_card = document.createElement('dl');
+        info_card.classList.add('dl-horizontal');
+
+        var info_name = document.createElement('dt');
+        info_name.innerHTML = 'Service';
+        info_card.appendChild(info_name);
+        var info_name_res = document.createElement('dd');
+        info_name_res.innerHTML = service.srv_name;
+        info_card.appendChild(info_name_res);
+
+        var service_price = document.createElement('dt');
+        service_price.innerHTML = 'Price';
+        info_card.appendChild(service_price);
+        var service_price_res = document.createElement('dd');
+        service_price_res.innerHTML = service.srv_price;
+        info_card.appendChild(service_price_res);
+
+        var cust_name = document.createElement('dt');
+        cust_name.innerHTML = 'Customer name';
+        info_card.appendChild(cust_name);
+        var cust_name_res = document.createElement('dd');
+        cust_name_res.innerHTML = service.cust_name;
+        info_card.appendChild(cust_name_res);
+
+        var txn_date = document.createElement('dt');
+        txn_date.innerHTML = 'Date';
+        info_card.appendChild(txn_date);
+        var txn_date_res = document.createElement('dd');
+        txn_date_res.innerHTML = service.txn_time;
+        info_card.appendChild(txn_date_res);
+
+        var location = document.createElement('dt');
+        location.innerHTML = 'Location';
+        info_card.appendChild(location);
+        var location_res = document.createElement('dd');
+        if (service.location == 1){
+            location_res.innerHTML = 'Chuna Bhatti';
+        }
+        else if (service.location == 2){
+            location_res.innerHTML = 'Lal Ghati';
+        }
+        info_card.appendChild(location_res);
+
+        child.appendChild(info_card);
+        txn_list.appendChild(child);
+
+    }
+
+}
+
+function populate_staff_viewinfo(staff){
+    args = {}
+    args['staff_id'] = staff.staff_id
+
+    document.getElementById('viewStaffName').innerHTML = staff.name;
+    document.getElementById('viewStaffPhone_1').innerHTML = staff.phone_1;
+    document.getElementById('viewStaffAddress').innerHTML = staff.address;
+    document.getElementById('viewActive').innerHTML = staff.is_active;
+
+    api_url = prepare_api_get_url('get_transaction_staff', args);
+    var ret = call_api(api_url, null, 'GET', get_transaction_staff_callback);
+
+}
+
 function edit_staff_info(ph1){
     args = {}
     args['key'] = ph1
