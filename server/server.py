@@ -2,44 +2,20 @@
 NOTE: Server only understands UTC. All dates received and sent are assumed UTC
 '''
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify,render_template
 from flask_cors import CORS
 from pymysql import cursors, connect
 from datetime import datetime
 from pytz import timezone, utc
+from queries import Query
 
 app = Flask(__name__)
 CORS(app)
 
-def connect_database():
-    connection = connect(host='localhost',
-                         user='server',
-                         password='server',
-                         db='CRM',
-                         cursorclass=cursors.DictCursor)
+query = Query()
 
-    # This is to avoid repeatable read in mysql server
-    connection.autocommit(True)
 
-    return connection
 
-def execute_query(query, args, ret_type):
-
-    db_conn = connect_database()
-
-    with db_conn.cursor() as cursor:
-        cursor.execute(query, args)
-        if ret_type == 'all':
-            result = cursor.fetchall()
-        elif ret_type == 'one':
-            result = cursor.fetchone()
-        else:
-            result = cursor.fetchall()
-        cursor.close()
-
-    db_conn.close()
-
-    return result
 
 def get_utc_date():
     IN = datetime.now(timezone('Asia/Kolkata'))
@@ -63,6 +39,7 @@ def add_cors(resp):
 @app.route('/')
 def root():
     return 'Welcome to CRM'
+    # return render_template("../client/main.html")
 
 
 @app.route('/auth_user', methods=['GET'])
@@ -71,73 +48,38 @@ def authenticate_user():
     username = request.args.get('username')
     password = request.args.get('password')
 
-    query = "SELECT * FROM users WHERE username=%s AND password=%s"
-    result = execute_query(query, (username, password), 'one')
-
-    if result is not None and result['is_active'] == 1:
-        return jsonify(result)
-    else:
-        return jsonify("false")
+    return query.get_username_pass(username, password)
 
 
 @app.route('/get_all_services')
 def get_all_services():
 
-    query = "SELECT * FROM services ORDER BY name"
-    result = execute_query(query, (), 'all')
-    return jsonify(result)
+    return query.get_all_services()
 
 @app.route('/get_all_staff')
 def get_all_staff():
 
-    query = "SELECT * FROM staff ORDER BY name"
-    result = execute_query(query, (), 'all')
-
-    return jsonify(result)
+    return query.get_all_staff()
 
 @app.route('/get_all_customers')
 def get_all_customers():
 
-    query = "SELECT name, phone_1, phone_2 FROM customers ORDER BY name"
-    result = execute_query(query, (), 'all')
-
-    return jsonify(result)
+    return query.get_all_customers()
 
 @app.route('/get_today_customers')
 def get_today_customers():
 
-    query = "SELECT DISTINCT cst.name, cst.customer_id FROM transactions AS txn INNER JOIN customers AS cst ON cst.customer_id = txn.customer_id WHERE txn.txn_time=%s";
-    result = execute_query(query, (get_utc_date()), 'all')
-
-    return jsonify(result)
+    return query.get_today_customers()
 
 @app.route('/get_today_customer_services')
 def get_today_customer_services():
 
-    customer_id = request.args.get('customer_id');
-    query = "SELECT DISTINCT svc.name FROM transactions AS txn INNER JOIN customers AS cst ON cst.customer_id = txn.customer_id INNER JOIN services AS svc ON svc.service_id = txn.service_id WHERE txn.txn_time=%s AND cst.customer_id = %s";
-    result = execute_query(query, (get_utc_date(), customer_id), 'all')
-
-    return jsonify(result)
-
+    return query.get_today_customer_services()
 
 @app.route('/get_today_stats')
 def get_today_stats():
 
-    final_result = {}
-    query = "SELECT COUNT(DISTINCT customer_id) as customers from transactions WHERE DATE(txn_time)=UTC_DATE"
-    result = execute_query(query, (), 'all')
-    final_result['customers'] = result[0]['customers']
-
-    query = "SELECT COUNT(*) AS total_customers FROM customers WHERE DATE(created_on)=UTC_DATE"
-    result = execute_query(query, (), 'all')
-    final_result['new_customers'] = result[0]['total_customers']
-
-    query = "SELECT COUNT(*) AS total_txn FROM transactions WHERE DATE(txn_time)=UTC_DATE"
-    result = execute_query(query, (), 'all')
-    final_result['txn'] = result[0]['total_txn']
-
-    return jsonify(final_result)
+    return query.get_today_stats()
 
 # This is the entry point for all search queries. It takes
 # Key and value as input.
@@ -147,23 +89,34 @@ def search_customer():
 
     search_key = request.args.get('key')
     search_value = request.args.get('value')
+    # search_value_name = request.args.get('value')
 
     if search_key == 'phone':
-        result = search_customer_by_phone(search_value)
+        result = query.search_customer_by_phone(search_value)
+
 
     return jsonify(result)
 
-def search_customer_by_phone(search_value):
+@app.route('/client_search')
+def client_search():
+    result = None
 
-    query = "SELECT customer_id, name, address, phone_1, phone_2, CAST(dob as char) as dob, IF(anniversary IS NULL, '', CAST(anniversary as char)) as anniversary, gender from customers WHERE phone_1=%s OR phone_2=%s"
-    result = execute_query(query, (search_value, search_value), 'one')
+    location = request.args.get('location')
+    search_text = request.args.get('search_text')
+    # search_value_name = request.args.get('value')
 
-    return result
+    if search_text == '' and location == 0:
+        result = query.get_all_customers()
+    else:
+        result = query.get_search_customers(location, search_text)
+
+
+    return jsonify(result)
+
 
 @app.route('/add_new_customer', methods=['GET'])
 def add_new_customer():
     args = request.args
-    query = "INSERT INTO customers (name, address, phone_1, phone_2, dob, anniversary, gender, created_on) VALUES (%s, %s, %s, %s, %s, %s, %s, UTC_TIMESTAMP)"
 
     gender = None
     if args.get('cst_gender_idx') == '1':
@@ -181,16 +134,44 @@ def add_new_customer():
     else:
         anniversary = '-'.join(['9999', args.get('cst_anniversary').split('/')[1], args.get('cst_anniversary').split('/')[0]])
 
-    execute_query(query, (args.get('cst_name'),
-                          args.get('cst_address'),
-                          args.get('cst_phone_1'),
-                          args.get('cst_phone_2'),
-                          dob,
-                          anniversary,
-                          gender)
-                      , 'one')
+    ret = query.add_new_customer((args.get('cst_name'),args.get('cst_address'),args.get('cst_phone_1'),args.get('cst_phone_2'),dob,anniversary,gender))
+    if (ret == None):
+        return 'false'
+    else:
+        return 'true'
 
-    return jsonify('true')
+@app.route('/edit_customer', methods=['GET'])
+def edit_customer():
+    args = request.args
+
+    gender = None
+    if args.get('cst_gender_idx') == '1':
+        gender = 'MALE'
+    elif args.get('cst_gender_idx') == '2':
+        gender = 'FEMALE'
+
+    if args.get('cst_dob') == '':
+        dob = None
+    else:
+        dob = '-'.join(['9999', args.get('cst_dob').split('/')[1], args.get('cst_dob').split('/')[0]])
+
+    if args.get('cst_anniversary') == '':
+        anniversary = None
+    else:
+        anniversary = '-'.join(['9999', args.get('cst_anniversary').split('/')[1], args.get('cst_anniversary').split('/')[0]])
+
+    ret = query.edit_customer((args.get('cst_name'),args.get('cst_address'),args.get('cst_phone_1'),args.get('cst_phone_2'),dob,anniversary,gender, args['key1'], args['key2']))
+    if (ret == None):
+        return 'false'
+    else:
+        return 'true'
+
+@app.route('/get_transaction_user', methods=['GET'])
+def get_transaction_user():
+    customer_id = request.args.get('cst_id');
+    result = query.get_transaction_user(customer_id)
+
+    return result
 
 @app.route('/add_customer_transaction', methods=['GET'])
 def add_customer_transaction():
@@ -198,9 +179,7 @@ def add_customer_transaction():
     service_id = request.args.get('service_id')
     staff_id = request.args.get('staff_id')
     location = request.args.get('location')
-
-    query = "INSERT INTO transactions (customer_id, service_id, staff_id, location, txn_time) VALUES (%s, %s, %s, %s, UTC_TIMESTAMP)"
-    execute_query(query, (customer_id, service_id, staff_id, location), 'one')
+    query.add_customer_transaction((customer_id, service_id, staff_id, location))
 
     return jsonify('true')
 
@@ -209,8 +188,7 @@ def add_new_service():
     service_name = request.args.get('service_name');
     service_price = request.args.get('service_price');
 
-    query = "INSERT INTO services (name, price) VALUES (%s, %s)"
-    execute_query(query, (service_name, service_price), 'one')
+    query.add_new_service((service_name, service_price))
 
     return jsonify('true')
 
@@ -218,28 +196,38 @@ def add_new_service():
 def delete_service():
     service_name = request.args.get('service_name');
 
-    query = "DELETE FROM services WHERE name=%s"
-    execute_query(query, (service_name), 'one')
+    query.delete_service((service_name))
 
     return jsonify('true')
+
+
+@app.route('/edit_staff_info', methods=['GET'])
+def edit_staff_info():
+    args = request.args
+    
+    query.edit_staff_info((args.get('staff_name'),args.get('staff_address'),args.get('staff_phone_1'), args.get('key')), int(args.get('staff_active')))
+
+    return jsonify('true')
+
+@app.route('/get_transaction_staff', methods=['GET'])
+def get_transaction_staff():
+    args = request.args
+    
+    result = query.get_transaction_staff(args.get('staff_id'))
+
+    return jsonify(result)
 
 @app.route('/add_new_staff', methods=['GET'])
 def add_new_staff():
     args = request.args
-    query = "INSERT INTO staff (name, address, phone_1, joined_on, is_active) VALUES (%s, %s, %s, UTC_TIMESTAMP, %s)"
-
-    execute_query(query, (args.get('staff_name'),
-                          args.get('staff_address'),
-                          args.get('staff_phone_1'),
-                          1)
-                      , 'one')
+    
+    query.add_new_staff((args.get('staff_name'),args.get('staff_address'),args.get('staff_phone_1'),"b'1'"))
 
     return jsonify('true')
 
 def main():
-    global db_conn
     # Connect to database
-    db_conn = connect_database()
-
+    # db_conn = connect_database()
+    pass
 if __name__ == '__main__':
     main()

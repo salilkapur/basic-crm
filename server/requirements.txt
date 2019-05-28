@@ -2,3 +2,4 @@ wheel
 Flask
 flask-cors
 PyMySQL
+numpy
