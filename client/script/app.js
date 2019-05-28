@@ -1,8 +1,8 @@
 /* Basic configuration.
  * This should be moved to a separate file ASAP.
  */
-// api_base_url = 'http://34.226.121.100:5000/'
-api_base_url = 'http://0.0.0.0:5000/'
+api_base_url = 'http://34.226.121.100:5000/'
+//api_base_url = 'http://0.0.0.0:5000/'
 
 // This is global variable used to keep track of the number of services for a customer
 cst_service_count = 0;
@@ -32,7 +32,7 @@ function call_api(url, data, method, callback) {
     }
 
     request.send()
-    // console.log("yeah")     
+    // console.log("yeah")
 
     return true
 }
@@ -108,7 +108,7 @@ function display_error(message, element_id=null) {
         element_id = 'staff_error'
     }
     else if (element_id == 'staff_error_modal'){
-        element_id = 'staff_error_modal'        
+        element_id = 'staff_error_modal'
     }
     else {
         element_id = 'edit_cst_error'
@@ -192,7 +192,7 @@ function populate_all_customers_list(response_data, id) {
     else if (id == 2){
         services_list = document.getElementById('today-customers-list')
     }
-    
+
     var modal = document.getElementById("editModal");
     var editlabel = document.getElementById("edit_customer");
     var span = document.getElementsByClassName("close")[0];
@@ -215,7 +215,7 @@ function populate_all_customers_list(response_data, id) {
     }
 
     services_list.innerHTML = '';
-    
+
 
     for (idx = 0; idx < response_data.length; idx++) {
         service = response_data[idx];
