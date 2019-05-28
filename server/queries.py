@@ -5,7 +5,7 @@ from pytz import timezone, utc
 from flask import Flask, request, jsonify,render_template,make_response
 import numpy as np
 
-def min_edit(seq1, seq2):  
+def min_edit(seq1, seq2):
     size_x = len(seq1) + 1
     size_y = len(seq2) + 1
     matrix = np.zeros ((size_x, size_y))
@@ -38,7 +38,7 @@ def get_utc_date():
 class Query:
 	def __init__(self):
 		pass
-	
+
 
 
 	def connect_database(self):
@@ -47,7 +47,7 @@ class Query:
 							 password='server',
 							 db='CRM',
 							 cursorclass=cursors.DictCursor)
-		
+
 
 		# This is to avoid repeatable read in mysql server
 		connection.autocommit(True)
@@ -71,7 +71,7 @@ class Query:
 		db_conn.close()
 
 		return result
-	
+
 	def get_username_pass(self, username, password):
 		query = "SELECT * FROM users WHERE username=%s AND password=%s"
 		result = self.execute_query(query, (username, password), 'one')
@@ -96,7 +96,7 @@ class Query:
 		# query = "SELECT DISTINCT txn.transaction_id, txn.staff_id, customer_id, service_id, location FROM transactions AS txn INNER JOIN customers AS cst ON cst.customer_id = txn.customer_id WHERE cst.customer_id=%s";
 		query = "SELECT txn.transaction_id as transaction_id, txn.staff_id, txn.customer_id, txn.service_id, txn.location as location, txn.txn_time as txn_time, srv.name as srv_name, srv.price as srv_price, st.name as staff_name From transactions txn, customers cst, services srv, staff st WHERE txn.customer_id = cst.customer_id AND txn.service_id = srv.service_id AND txn.staff_id = st.staff_id AND cst.customer_id = %s ORDER BY txn.txn_time DESC "
 		result = self.execute_query(query, (customer_id), 'all')
-		
+
 		return jsonify(result)
 
 	def get_all_customers(self):
@@ -126,7 +126,7 @@ class Query:
 		location_res = [i['customer_id'] for i in location_res]
 		if (len(location_res) == 0):
 			for i in out_arr:
-				out_result.append(result[i]) 
+				out_result.append(result[i])
 		else:
 			for i in out_arr:
 				if result[i]['customer_id'] in location_res:
@@ -138,7 +138,7 @@ class Query:
 
 		# query = "SELECT txn.transaction_id as transaction_id, txn.staff_id, txn.customer_id, txn.service_id, txn.location as location, txn.txn_time as txn_time, srv.name as srv_name, srv.price as srv_price, st.name as staff_name From transactions txn, customers cst, services srv, staff st WHERE txn.customer_id = cst.customer_id AND txn.service_id = srv.service_id AND txn.staff_id = st.staff_id AND txn.txn_time = %s ORDER BY txn.txn_time DESC "
 		# result = self.execute_query(query, (get_utc_date()), 'all')
-		
+
 		# return jsonify(result)
 		query = "SELECT DISTINCT cst.customer_id as customer_id, cst.name as name, cst.address as address, cst.phone_1 as phone_1, cst.phone_2 as phone_2, CAST(cst.dob as char) as dob, IF(cst.anniversary IS NULL, '', CAST(cst.anniversary as char)) as anniversary, cst.gender as gender FROM transactions AS txn INNER JOIN customers AS cst ON cst.customer_id = txn.customer_id WHERE DATE(txn_time)=UTC_DATE";
 		result = self.execute_query(query, (), 'all')
@@ -201,8 +201,8 @@ class Query:
 		query = "SELECT customer_id from customers WHERE (phone_1=%s AND phone_1!='') OR (phone_2=%s AND phone_2!='')"
 		result1 = self.execute_query(query, (arg[2], arg[3]), 'one')
 		result2 = self.execute_query(query, (arg[-2], arg[-1]), 'one')
-		print (arg[-2], arg[-1])
-		print result2
+		print(arg[-2], arg[-1])
+		print(result2)
 		if (result1 == None or result1['customer_id'] == result2['customer_id']):
 			query = "UPDATE customers SET name = %s, address = %s, phone_1 = %s, phone_2 = %s, dob = %s, anniversary = %s, gender = %s WHERE (phone_1=%s AND phone_1!='') OR (phone_2=%s AND phone_2!='')"
 			self.execute_query(query, arg, 'one')
@@ -228,13 +228,13 @@ class Query:
 		query = "INSERT INTO staff (name, address, phone_1, joined_on, is_active) VALUES (%s, %s, %s, UTC_TIMESTAMP, %s)"
 
 		self.execute_query(query, arg, 'one')
-	
+
 	def edit_staff_info(self, arg, is_active):
-		print (is_active)
+		print(is_active)
 		if (is_active == 1):
 			query = "UPDATE staff SET name = %s, address = %s, phone_1 = %s, is_active = b'1' WHERE (phone_1=%s AND phone_1!='')"
 		elif (is_active == 0):
-			query = "UPDATE staff SET name = %s, address = %s, phone_1 = %s, is_active = b'0' WHERE (phone_1=%s AND phone_1!='')"	
+			query = "UPDATE staff SET name = %s, address = %s, phone_1 = %s, is_active = b'0' WHERE (phone_1=%s AND phone_1!='')"
 		self.execute_query(query, arg, 'one')
 
 	def get_transaction_staff(self, arg):
@@ -243,4 +243,4 @@ class Query:
 
 		return result
 
-	
+
