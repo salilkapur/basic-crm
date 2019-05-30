@@ -2,12 +2,13 @@
  * This should be moved to a separate file ASAP.
  */
 api_base_url = 'http://34.226.121.100:5000/'
-//api_base_url = 'http://0.0.0.0:5000/'
+// api_base_url = 'http://0.0.0.0:5000/'
 
 // This is global variable used to keep track of the number of services for a customer
 cst_service_count = 0;
 cst_services = [];
-
+admin = false
+client_data = {}
 window.onload = init_main()
 
 // A utility function to make API calls
@@ -73,6 +74,12 @@ function goto_customers() {
     document.getElementById('li-customers').classList.add('active');
     document.getElementById('cst_search_location').selectedIndex = 0
     document.getElementById('search_name').value = ''
+    if (admin){
+        document.getElementById('download_btn').hidden = false;
+    }
+    else{
+        document.getElementById('download_btn').hidden = true;
+    }
     get_all_customers();
 }
 
@@ -88,8 +95,19 @@ function goto_staff() {
     hide_all_content();
     document.getElementById('staff-content').hidden = false;
     document.getElementById('li-staff').classList.add('active');
-
     get_all_staff(populate_staff_manage_list);
+}
+
+function logout_callback(){
+    window.location.href = 'index.html'
+
+}
+
+function goto_logoout(){
+    api_url = prepare_api_get_url('logout', args);
+    var ret = call_api(api_url, null, 'GET', logout_callback)
+    print_api_result(ret)
+
 }
 
 function print_api_result(ret) {
@@ -117,6 +135,21 @@ function display_error(message, element_id=null) {
     var error = document.getElementById(element_id);
     error.hidden = false;
     error.innerHTML = message;
+}
+
+function download_csv(){
+    const items = client_data
+    const replacer = (key, value) => value === null ? '' : value // specify how you want to handle null values here
+    const header = Object.keys(items[0])
+    let csv = items.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
+    csv.unshift(header.join(','))
+    csv = csv.join('\r\n')
+    var hiddenElement = document.createElement('a');
+    hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+    hiddenElement.target = '_blank';
+    hiddenElement.download = 'client_data.csv';
+    hiddenElement.click();
+    console.log(csv)
 }
 
 function reset_cst_error() {
@@ -166,28 +199,40 @@ function reset_staff_information() {
 // User authentication functions
 function auth_user_callback(response_data) {
     console.log(response_data)
+    if (response_data == '1'){
+        window.location.href = 'main.html'
+        console.log("admin")
+    }
+    else if (response_data == '0'){
+        console.log("not admin")
+        window.location.href = 'main.html'
+
+    }
+    else if (response_data == 'Bad login'){
+        alert("login failed")
+    }
 }
 
 function auth_user () {
     args = {};
-    args['username']='salil';
-    args['password']='salil';
+    args['username']=document.getElementById('username').value;
+    args['password']=document.getElementById('password').value;
 
-    api_url = prepare_api_get_url('auth_user', args);
+    api_url = prepare_api_get_url('login', args);
     var ret = call_api(api_url, null, 'GET', auth_user_callback)
     print_api_result(ret)
 
-    return true
+    return ret
 }
 
 
 function populate_all_customers_list(response_data, id) {
     var idx = 0;
-
     // Get the services element
     var services_list = '';
     if (id == 1){
         services_list = document.getElementById('all-customers-list')
+        client_data = response_data
     }
     else if (id == 2){
         services_list = document.getElementById('today-customers-list')
@@ -280,9 +325,39 @@ function populate_all_customers_list(response_data, id) {
     }
 }
 
-function init_main() {
+function main_callback(res){
 
-    get_all_services();
-    get_all_staff(populate_staff_manage_list);
+    if (res == 'Unauthorized'){
+        window.location.href = 'index.html'
+    }
+    else{
+        if (res == '1'){
+            admin = true   
+        }
+        else{
+            admin = false
+        }
+        console.log( admin );
+    }
+}
+
+function init_main() {
+    var path = window.location.pathname;
+    var page = path.split("/").pop();
+    console.log( page );
+    if (page != 'index.html'){
+       args = {}
+        args['key'] = 'value'
+        api_url = prepare_api_get_url('Main', args);
+        var ret = call_api(api_url, null, 'GET', main_callback)
+        print_api_result(ret) 
+    }
+    
+    // l = auth_user();
+    // if (l == false){
+    //     location.href = 'login.html'
+    // }
+    // get_all_services();
+    // get_all_staff(populate_staff_manage_list);
 
 }

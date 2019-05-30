@@ -40,6 +40,9 @@
                         <li id='li-staff'>
                             <a onclick="goto_staff()">Staff</a>
                         </li>
+                        <li id='li-staff'>
+                            <a onclick="goto_logoout()">Logout</a>
+                        </li>
                     </ul>
                 </div>
             </nav>
@@ -229,6 +232,10 @@
                                 </div>
                             </div>
                         </form>
+                        <br>
+                        <button type="button" id="download_btn"
+                                         class="btn btn-secondary mb-1"
+                                         onclick="download_csv()" hidden>Download data</button>
                     </div>
                 </div>
             </div>
