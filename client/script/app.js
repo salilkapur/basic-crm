@@ -9,6 +9,7 @@ cst_service_count = 0;
 cst_services = [];
 admin = false
 client_data = {}
+logged_in = 0
 window.onload = init_main()
 
 // A utility function to make API calls
@@ -33,7 +34,6 @@ function call_api(url, data, method, callback) {
     }
 
     request.send()
-    // console.log("yeah")
 
     return true
 }
@@ -87,7 +87,9 @@ function goto_services() {
     hide_all_content();
     document.getElementById('services-content').hidden = false;
     document.getElementById('li-services').classList.add('active');
-
+    if (admin == false){
+        document.getElementById('btn-del-service').hidden = true;
+    }
     get_all_services(populate_services_manange_list);
 }
 
@@ -103,7 +105,9 @@ function logout_callback(){
 
 }
 
-function goto_logoout(){
+function goto_logout(){
+    args = {}
+    args['key'] = 'val'
     api_url = prepare_api_get_url('logout', args);
     var ret = call_api(api_url, null, 'GET', logout_callback)
     print_api_result(ret)
@@ -149,7 +153,6 @@ function download_csv(){
     hiddenElement.target = '_blank';
     hiddenElement.download = 'client_data.csv';
     hiddenElement.click();
-    console.log(csv)
 }
 
 function reset_cst_error() {
@@ -211,18 +214,19 @@ function auth_user_callback(response_data) {
     else if (response_data == 'Bad login'){
         alert("login failed")
     }
+    else{
+        alert("noooooo")
+    }
 }
 
 function auth_user () {
     args = {};
     args['username']=document.getElementById('username').value;
     args['password']=document.getElementById('password').value;
-
+    console.log('test')
     api_url = prepare_api_get_url('login', args);
     var ret = call_api(api_url, null, 'GET', auth_user_callback)
     print_api_result(ret)
-
-    return ret
 }
 
 
@@ -332,7 +336,7 @@ function main_callback(res){
     }
     else{
         if (res == '1'){
-            admin = true   
+            admin = true
         }
         else{
             admin = false
@@ -342,22 +346,24 @@ function main_callback(res){
 }
 
 function init_main() {
+//    console.log('refresh')
     var path = window.location.pathname;
     var page = path.split("/").pop();
     console.log( page );
-    if (page != 'index.html'){
+    if (page == 'main.html'){
        args = {}
         args['key'] = 'value'
         api_url = prepare_api_get_url('Main', args);
         var ret = call_api(api_url, null, 'GET', main_callback)
-        print_api_result(ret) 
+        print_api_result(ret)
     }
-    
-    // l = auth_user();
-    // if (l == false){
-    //     location.href = 'login.html'
-    // }
-    // get_all_services();
-    // get_all_staff(populate_staff_manage_list);
+//    else{
+//        args = {}
+//        args['username'] = ''
+//        args['password'] = ''
+//        api_url = prepare_api_get_url('login', args);
+//        var ret = call_api(api_url, null, 'GET', auth_user_callback)
+//        print_api_result(ret)
+//    }
 
 }

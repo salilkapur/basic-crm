@@ -82,7 +82,7 @@ class Query:
 			out[user['username']] = temp
 
 		return out
-	
+
 	def get_username_pass(self, username, password):
 		query = "SELECT * FROM users WHERE username=%s AND password=%s"
 		result = self.execute_query(query, (username, password), 'one')

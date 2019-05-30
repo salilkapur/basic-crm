@@ -62,7 +62,7 @@ def login():
         flask_login.login_user(user)
         print ("login")
         return jsonify(str(users[username]['is_admin']))
-    print "bad login"
+    print ("bad login")
     return jsonify('Bad login')
 
 @app.route('/protected')
@@ -97,6 +97,7 @@ def add_cors(resp):
 @app.route('/Main')
 @flask_login.login_required
 def root():
+    print ("enter main")
     return jsonify(str(users[flask_login.current_user.id]['is_admin']))
     # return render_template("../client/main.html")
 
@@ -266,7 +267,7 @@ def delete_service():
 @app.route('/edit_staff_info', methods=['GET'])
 def edit_staff_info():
     args = request.args
-    
+
     query.edit_staff_info((args.get('staff_name'),args.get('staff_address'),args.get('staff_phone_1'), args.get('key')), int(args.get('staff_active')))
 
     return jsonify('true')
@@ -274,7 +275,7 @@ def edit_staff_info():
 @app.route('/get_transaction_staff', methods=['GET'])
 def get_transaction_staff():
     args = request.args
-    
+
     result = query.get_transaction_staff(args.get('staff_id'))
 
     return jsonify(result)
@@ -282,7 +283,7 @@ def get_transaction_staff():
 @app.route('/add_new_staff', methods=['GET'])
 def add_new_staff():
     args = request.args
-    
+
     query.add_new_staff((args.get('staff_name'),args.get('staff_address'),args.get('staff_phone_1'),"b'1'"))
 
     return jsonify('true')
