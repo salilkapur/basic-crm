@@ -8,6 +8,7 @@ api_base_url = 'http://34.226.121.100:5000/'
 cst_service_count = 0;
 cst_services = [];
 admin = false
+client_data = {}
 window.onload = init_main()
 
 // A utility function to make API calls
@@ -73,6 +74,12 @@ function goto_customers() {
     document.getElementById('li-customers').classList.add('active');
     document.getElementById('cst_search_location').selectedIndex = 0
     document.getElementById('search_name').value = ''
+    if (admin){
+        document.getElementById('download_btn').hidden = false;
+    }
+    else{
+        document.getElementById('download_btn').hidden = true;
+    }
     get_all_customers();
 }
 
@@ -88,7 +95,6 @@ function goto_staff() {
     hide_all_content();
     document.getElementById('staff-content').hidden = false;
     document.getElementById('li-staff').classList.add('active');
-
     get_all_staff(populate_staff_manage_list);
 }
 
@@ -129,6 +135,21 @@ function display_error(message, element_id=null) {
     var error = document.getElementById(element_id);
     error.hidden = false;
     error.innerHTML = message;
+}
+
+function download_csv(){
+    const items = client_data
+    const replacer = (key, value) => value === null ? '' : value // specify how you want to handle null values here
+    const header = Object.keys(items[0])
+    let csv = items.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
+    csv.unshift(header.join(','))
+    csv = csv.join('\r\n')
+    var hiddenElement = document.createElement('a');
+    hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+    hiddenElement.target = '_blank';
+    hiddenElement.download = 'client_data.csv';
+    hiddenElement.click();
+    console.log(csv)
 }
 
 function reset_cst_error() {
@@ -207,11 +228,11 @@ function auth_user () {
 
 function populate_all_customers_list(response_data, id) {
     var idx = 0;
-
     // Get the services element
     var services_list = '';
     if (id == 1){
         services_list = document.getElementById('all-customers-list')
+        client_data = response_data
     }
     else if (id == 2){
         services_list = document.getElementById('today-customers-list')

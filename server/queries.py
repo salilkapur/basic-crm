@@ -46,6 +46,7 @@ class Query:
 							 user='server',
 							 password='server',
 							 db='CRM',
+							 cursorclass=cursors.DictCursor)
 
 		# This is to avoid repeatable read in mysql server
 		connection.autocommit(True)
