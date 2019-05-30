@@ -47,11 +47,6 @@ class Query:
 							 password='server',
 							 db='CRM',
 							 cursorclass=cursors.DictCursor)
-		connection = connect(host='localhost',
-							 user='root',
-							 password='gompas_123',
-							 db='CRM',
-							 cursorclass=cursors.DictCursor)
 
 		# This is to avoid repeatable read in mysql server
 		connection.autocommit(True)
