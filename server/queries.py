@@ -48,6 +48,7 @@ class Query:
 							 db='CRM',
 							 cursorclass=cursors.DictCursor)
 
+
 		# This is to avoid repeatable read in mysql server
 		connection.autocommit(True)
 
@@ -83,6 +84,7 @@ class Query:
 
 		return out
 	
+
 	def get_username_pass(self, username, password):
 		query = "SELECT * FROM users WHERE username=%s AND password=%s"
 		result = self.execute_query(query, (username, password), 'one')
