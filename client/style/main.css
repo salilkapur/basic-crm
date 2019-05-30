@@ -139,3 +139,7 @@ ul ul a {
 #client_page{
     margin-top: 1%;
 }
+
+select.form-control:not([size]):not([multiple]) {
+  height: auto !important;
+}

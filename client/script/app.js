@@ -7,7 +7,7 @@ api_base_url = 'http://34.226.121.100:5000/'
 // This is global variable used to keep track of the number of services for a customer
 cst_service_count = 0;
 cst_services = [];
-
+admin = false
 window.onload = init_main()
 
 // A utility function to make API calls
@@ -166,18 +166,30 @@ function reset_staff_information() {
 // User authentication functions
 function auth_user_callback(response_data) {
     console.log(response_data)
+    if (response_data == '1'){
+        window.location.href = 'main.html'
+        console.log("admin")
+    }
+    else if (response_data == '0'){
+        console.log("not admin")
+        window.location.href = 'main.html'
+
+    }
+    else if (response_data == 'Bad login'){
+        alert("login failed")
+    }
 }
 
 function auth_user () {
     args = {};
-    args['username']='salil';
-    args['password']='salil';
+    args['username']=document.getElementById('username').value;
+    args['password']=document.getElementById('password').value;
 
-    api_url = prepare_api_get_url('auth_user', args);
+    api_url = prepare_api_get_url('login', args);
     var ret = call_api(api_url, null, 'GET', auth_user_callback)
     print_api_result(ret)
 
-    return true
+    return ret
 }
 
 
@@ -280,9 +292,39 @@ function populate_all_customers_list(response_data, id) {
     }
 }
 
-function init_main() {
+function main_callback(res){
 
-    get_all_services();
-    get_all_staff(populate_staff_manage_list);
+    if (res == 'Unauthorized'){
+        window.location.href = 'index.html'
+    }
+    else{
+        if (res == '1'){
+            admin = true   
+        }
+        else{
+            admin = false
+        }
+        console.log( admin );
+    }
+}
+
+function init_main() {
+    var path = window.location.pathname;
+    var page = path.split("/").pop();
+    console.log( page );
+    if (page != 'index.html'){
+       args = {}
+        args['key'] = 'value'
+        api_url = prepare_api_get_url('Main', args);
+        var ret = call_api(api_url, null, 'GET', main_callback)
+        print_api_result(ret) 
+    }
+    
+    // l = auth_user();
+    // if (l == false){
+    //     location.href = 'login.html'
+    // }
+    // get_all_services();
+    // get_all_staff(populate_staff_manage_list);
 
 }
