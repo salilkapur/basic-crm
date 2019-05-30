@@ -2,20 +2,78 @@
 NOTE: Server only understands UTC. All dates received and sent are assumed UTC
 '''
 
-from flask import Flask, request, jsonify,render_template
+from flask import Flask, request, jsonify,render_template, redirect, url_for, session
 from flask_cors import CORS
 from pymysql import cursors, connect
 from datetime import datetime
 from pytz import timezone, utc
 from queries import Query
+import flask_login
+import os
+
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24)
 CORS(app)
 
 query = Query()
 
+login_manager = flask_login.LoginManager()
+
+login_manager.init_app(app)
+
+users = query.get_all_users()
+
+class User(flask_login.UserMixin):
+    pass
 
 
+@login_manager.user_loader
+def user_loader(username):
+    if username not in users:
+        return
+
+    user = User()
+    user.id = username
+    return user
+
+
+@login_manager.request_loader
+def request_loader(request):
+    username = request.args.get('username')
+    if username not in users:
+        return
+
+    user = User()
+    user.id = username
+
+    # DO NOT ever store passwords in plaintext and always compare password
+    # hashes using constant-time comparison!
+    user.is_authenticated = request.args['password'] == users[username]['password']
+
+    return user
+
+@app.route('/login', methods=['GET'])
+def login():
+    username = request.args['username']
+    if username in users and request.args['password'] == users[username]['password']:
+        user = User()
+        user.id = username
+        flask_login.login_user(user)
+        print ("login")
+        return jsonify(str(users[username]['is_admin']))
+    print "bad login"
+    return jsonify('Bad login')
+
+@app.route('/protected')
+@flask_login.login_required
+def protected():
+    return 'Logged in as: ' + flask_login.current_user.id
+
+@app.route('/logout')
+def logout():
+    flask_login.logout_user()
+    return jsonify('Logged out')
 
 def get_utc_date():
     IN = datetime.now(timezone('Asia/Kolkata'))
@@ -36,11 +94,15 @@ def add_cors(resp):
         resp.headers['Access-Control-Max-Age'] = '1'
     return resp
 
-@app.route('/')
+@app.route('/Main')
+@flask_login.login_required
 def root():
-    return 'Welcome to CRM'
+    return jsonify(str(users[flask_login.current_user.id]['is_admin']))
     # return render_template("../client/main.html")
 
+@login_manager.unauthorized_handler
+def unauthorized_handler():
+    return jsonify('Unauthorized')
 
 @app.route('/auth_user', methods=['GET'])
 def authenticate_user():
