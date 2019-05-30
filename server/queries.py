@@ -47,7 +47,11 @@ class Query:
 							 password='server',
 							 db='CRM',
 							 cursorclass=cursors.DictCursor)
-
+		connection = connect(host='localhost',
+							 user='root',
+							 password='gompas_123',
+							 db='CRM',
+							 cursorclass=cursors.DictCursor)
 
 		# This is to avoid repeatable read in mysql server
 		connection.autocommit(True)
@@ -55,7 +59,6 @@ class Query:
 		return connection
 
 	def execute_query(self,query, args, ret_type):
-
 		db_conn = self.connect_database()
 
 		with db_conn.cursor() as cursor:
@@ -72,6 +75,19 @@ class Query:
 
 		return result
 
+	def get_all_users(self):
+		query = "SELECT * FROM users"
+		result = self.execute_query(query, (), 'all')
+
+		out = {}
+		for user in result:
+			temp = {}
+			temp['password'] = user['password']
+			temp['is_admin'] = user['is_admin']
+			out[user['username']] = temp
+
+		return out
+	
 	def get_username_pass(self, username, password):
 		query = "SELECT * FROM users WHERE username=%s AND password=%s"
 		result = self.execute_query(query, (username, password), 'one')
@@ -135,18 +151,12 @@ class Query:
 		return out_result
 
 	def get_today_customers(self):
-
-		# query = "SELECT txn.transaction_id as transaction_id, txn.staff_id, txn.customer_id, txn.service_id, txn.location as location, txn.txn_time as txn_time, srv.name as srv_name, srv.price as srv_price, st.name as staff_name From transactions txn, customers cst, services srv, staff st WHERE txn.customer_id = cst.customer_id AND txn.service_id = srv.service_id AND txn.staff_id = st.staff_id AND txn.txn_time = %s ORDER BY txn.txn_time DESC "
-		# result = self.execute_query(query, (get_utc_date()), 'all')
-
-		# return jsonify(result)
 		query = "SELECT DISTINCT cst.customer_id as customer_id, cst.name as name, cst.address as address, cst.phone_1 as phone_1, cst.phone_2 as phone_2, CAST(cst.dob as char) as dob, IF(cst.anniversary IS NULL, '', CAST(cst.anniversary as char)) as anniversary, cst.gender as gender FROM transactions AS txn INNER JOIN customers AS cst ON cst.customer_id = txn.customer_id WHERE DATE(txn_time)=UTC_DATE";
 		result = self.execute_query(query, (), 'all')
 
 		return jsonify(result)
 
 	def get_today_customer_services(self):
-
 		customer_id = request.args.get('customer_id');
 		query = "SELECT DISTINCT svc.name FROM transactions AS txn INNER JOIN customers AS cst ON cst.customer_id = txn.customer_id INNER JOIN services AS svc ON svc.service_id = txn.service_id WHERE txn.txn_time=%s AND cst.customer_id = %s";
 		result = self.execute_query(query, (get_utc_date(), customer_id), 'all')
@@ -154,7 +164,6 @@ class Query:
 		return jsonify(result)
 
 	def get_today_stats(self):
-
 		final_result = {}
 		query = "SELECT COUNT(DISTINCT customer_id) as customers from transactions WHERE DATE(txn_time)=UTC_DATE"
 		result = self.execute_query(query, (), 'all')
@@ -171,14 +180,12 @@ class Query:
 		return jsonify(final_result)
 
 	def search_customer_by_phone(self, search_value):
-
 		query = "SELECT customer_id, name, address, phone_1, phone_2, CAST(dob as char) as dob, IF(anniversary IS NULL, '', CAST(anniversary as char)) as anniversary, gender from customers WHERE (phone_1=%s AND phone_1!='') OR (phone_2=%s AND phone_2!='')"
 		result = self.execute_query(query, (search_value, search_value), 'one')
 
 		return result
 
 	def search_customer_by_name(self, search_value):
-
 		query = "SELECT customer_id, name, address, phone_1, phone_2, CAST(dob as char) as dob, IF(anniversary IS NULL, '', CAST(anniversary as char)) as anniversary, gender from customers WHERE name=%s"
 		result = self.execute_query(query, (search_value), 'all')
 
@@ -186,15 +193,14 @@ class Query:
 
 	def add_new_customer(self, arg):
 		query = "SELECT customer_id from customers WHERE (phone_1=%s AND phone_1!='') OR (phone_2=%s AND phone_2!='')"
-		# query = "SELECT customer_id from customers WHERE phone_1=%s OR phone_2=%s"
-		# print (arg[2], arg[3])
 		result = self.execute_query(query, (arg[2], arg[3]), 'one')
-		# print(result)
 		if (result == None):
 			query = "INSERT INTO customers (name, address, phone_1, phone_2, dob, anniversary, gender, created_on) VALUES (%s, %s, %s, %s, %s, %s, %s, UTC_TIMESTAMP)"
 			self.execute_query(query, arg, 'one')
+
 			return "yes"
 		else:
+
 			return None
 
 	def edit_customer(self, arg):
@@ -206,8 +212,10 @@ class Query:
 		if (result1 == None or result1['customer_id'] == result2['customer_id']):
 			query = "UPDATE customers SET name = %s, address = %s, phone_1 = %s, phone_2 = %s, dob = %s, anniversary = %s, gender = %s WHERE (phone_1=%s AND phone_1!='') OR (phone_2=%s AND phone_2!='')"
 			self.execute_query(query, arg, 'one')
+
 			return "yes"
 		else:
+
 			return None
 
 	def add_customer_transaction(self, arg):
@@ -215,22 +223,18 @@ class Query:
 		self.execute_query(query, arg, 'one')
 
 	def add_new_service(self, arg):
-
 		query = "INSERT INTO services (name, price) VALUES (%s, %s)"
 		self.execute_query(query, arg, 'one')
 
 	def delete_service(self, arg):
-
 		query = "DELETE FROM services WHERE name=%s"
 		self.execute_query(query, arg, 'one')
 
 	def add_new_staff(self, arg):
 		query = "INSERT INTO staff (name, address, phone_1, joined_on, is_active) VALUES (%s, %s, %s, UTC_TIMESTAMP, %s)"
-
 		self.execute_query(query, arg, 'one')
 
 	def edit_staff_info(self, arg, is_active):
-		print(is_active)
 		if (is_active == 1):
 			query = "UPDATE staff SET name = %s, address = %s, phone_1 = %s, is_active = b'1' WHERE (phone_1=%s AND phone_1!='')"
 		elif (is_active == 0):

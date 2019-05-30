@@ -200,27 +200,30 @@ function populate_staff_manage_list(response_data) {
 
         child.appendChild(phone_label);
         child.append(document.createElement('br'));
-        var edit_btn = document.createElement('button');
-        edit_btn.classList.add('btn');
-        edit_btn.classList.add('btn-default');
-        edit_btn.classList.add('btn-sm');
-        edit_btn.innerHTML = "Edit ";
-        edit_btn.id = "edit_btn";
-        // console.log(edit_btn.id);
-        var edit_span = document.createElement('span');
-        edit_span.classList.add('glyphicon')
-        edit_span.classList.add('glyphicon-edit')
-        edit_btn.appendChild(edit_span);
-        edit_btn.style.margin = "10px"
-        child.append(edit_btn)
-        edit_btn.onclick = (function(staff){
-            return function(){
-                editlabel.hidden = true;
-                checkbox.checked = false;
-                modal.style.display = "block";
-                populate_staff_editinfo(staff);
-            }
-        })(staff);
+        if (admin){
+            var edit_btn = document.createElement('button');
+            edit_btn.classList.add('btn');
+            edit_btn.classList.add('btn-default');
+            edit_btn.classList.add('btn-sm');
+            edit_btn.innerHTML = "Edit ";
+            edit_btn.id = "edit_btn";
+            // console.log(edit_btn.id);
+            var edit_span = document.createElement('span');
+            edit_span.classList.add('glyphicon')
+            edit_span.classList.add('glyphicon-edit')
+            edit_btn.appendChild(edit_span);
+            edit_btn.style.margin = "10px"
+            child.append(edit_btn)
+            edit_btn.onclick = (function(staff){
+                return function(){
+                    editlabel.hidden = true;
+                    checkbox.checked = false;
+                    modal.style.display = "block";
+                    populate_staff_editinfo(staff);
+                }
+            })(staff);
+
+        }
 
         var view_btn = document.createElement('button');
         view_btn.classList.add('btn');
@@ -245,3 +248,4 @@ function populate_staff_manage_list(response_data) {
         staff_list.appendChild(child);
     }
 }
+// document.getElementById("myP").style.visibility = "hidden"
