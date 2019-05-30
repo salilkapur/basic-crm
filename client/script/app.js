@@ -2,7 +2,7 @@
  * This should be moved to a separate file ASAP.
  */
 api_base_url = 'http://34.226.121.100:5000/'
-//api_base_url = 'http://0.0.0.0:5000/'
+// api_base_url = 'http://0.0.0.0:5000/'
 
 // This is global variable used to keep track of the number of services for a customer
 cst_service_count = 0;
@@ -90,6 +90,18 @@ function goto_staff() {
     document.getElementById('li-staff').classList.add('active');
 
     get_all_staff(populate_staff_manage_list);
+}
+
+function logout_callback(){
+    window.location.href = 'index.html'
+
+}
+
+function goto_logoout(){
+    api_url = prepare_api_get_url('logout', args);
+    var ret = call_api(api_url, null, 'GET', logout_callback)
+    print_api_result(ret)
+
 }
 
 function print_api_result(ret) {
